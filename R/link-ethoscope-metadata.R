@@ -88,7 +88,7 @@ link_ethoscope_metadata <- function(x, result_dir=NULL, result_comp = NULL, inde
       pattern <- ".*\\.db"
 
       system.time(
-      query <- build_query(result_dir, query, index_file, pattern = pattern)
+      query <- build_query(result_dir, query, index_file)
       )
     }
 
