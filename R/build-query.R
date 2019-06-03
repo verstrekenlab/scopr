@@ -1,8 +1,8 @@
 #' @noRd
 build_query <- function(result_dir,
-                                  query = NULL,
-                                  # use_cached = FALSE,
-                                  index_file = NULL){
+                        query = NULL,
+                        # use_cached = FALSE,
+                        index_file = NULL,
   data = .SD = .N = time = n = machine_name = datetime = path = NULL
   files_info <- list_result_files(result_dir, index_file)
   unique_fi = files_info[,.SD[.N],by=key(files_info)]
@@ -13,6 +13,8 @@ build_query <- function(result_dir,
     q <- data.table::copy(data.table::as.data.table(query))
 
     check_columns(c("date","machine_name"), q)
+
+    message("parsing date and time")
     if(!"time" %in% colnames(q))
       q[, time := NA_character_]
 
@@ -22,6 +24,7 @@ build_query <- function(result_dir,
   }
 
 
+  message("processing rows without time")
   # first of all, we retreive the files for which time was not specified (NA)
   q_no_time <- q[is.na(time)]
   q_no_time[, time:=NULL]
@@ -31,7 +34,8 @@ build_query <- function(result_dir,
   unique_fi_last_of_day <- unique(unique_fi_last_of_day, by=c("date", "machine_name"), fromLast = TRUE)
 
 
-
+  message("... removing duplicates i.e. no 2 db files will be from same ethoscope and day.
+  If more than 1 is found, we keep the last. A warning will be emitted i that case")
 # here display duplicated experiments on same date
   duplicated_queries <- unique_fi_last_of_day[q_no_time, on=c("date", "machine_name")][n>1]
   duplicated_queries <- unique(duplicated_queries, by=c("date", "machine_name"))
@@ -52,6 +56,7 @@ build_query <- function(result_dir,
   out_no_time <-  unique_fi_last_of_day[q_no_time, on=c("date", "machine_name")]
 
 
+  message("processing rows with time")
   # now, we process the query row with time
   q_time <- q[!is.na(time)]
   out_time <- unique_fi[q_time]

@@ -9,7 +9,8 @@
 link_ethoscope_metadata_remote(x, remote_dir, result_dir,
   index_file = "index.txt", overwrite_local = FALSE, verbose = TRUE)
 
-link_ethoscope_metadata(x, result_dir = NULL, index_file = NULL)
+link_ethoscope_metadata(x, result_dir = NULL, result_comp = NULL,
+  index_file = NULL)
 }
 \arguments{
 \item{x}{object such as a \link{data.frame}, or the name of a file (see detail)}

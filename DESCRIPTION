@@ -12,7 +12,7 @@ Description: Handling of behavioural data from the Ethoscope platform
     small animals in a distributed and real-time fashion. The default tracking algorithm records primary variables
     such as xy coordinates, dimensions and speed.
     This package is part of the rethomics framework <http://rethomics.github.io/>.
-Depends:  
+Depends: 
     R (>= 3.00),
     behavr
 Imports: 
@@ -32,5 +32,5 @@ Encoding: UTF-8
 LazyData: true
 URL: https://github.com/rethomics/scopr
 BugReports: https://github.com/rethomics/scopr/issues
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.1
 Roxygen: list(markdown = TRUE)

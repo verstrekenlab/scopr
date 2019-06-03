@@ -49,7 +49,9 @@
 #' @references
 #' * [metadata tutorial](https://rethomics.github.io/metadata.html) -- how to work with metadata
 #' @export
-link_ethoscope_metadata <- function(x, result_dir=NULL, index_file=NULL){
+#'
+link_ethoscope_metadata <- function(x, result_dir=NULL, result_comp = NULL, index_file=NULL){
+  # result_dir = NULL, index_file = NULL
   pay = experiment_id = n = .N = region_id = id = . = path = dst_path = key = NULL
   query <- x
   # if query is a readable csv file, we parse it
@@ -73,14 +75,29 @@ link_ethoscope_metadata <- function(x, result_dir=NULL, index_file=NULL){
   else if(is.data.frame(query)){
     if(!"path"  %in% colnames(query)){
       if(is.null(result_dir))
-        stop("You must specify a result_dir to lookup results!")
+        if(is.null(result_comp)) {
+          stop("You must specify a result_dir to lookup results!")
+        } else {
+          tmp_dir <- tempdir()
+          result_dir <- file.path(tmp_dir, ethoscope_results)
+          cmd <- paste0("gzip -dc", " ", result_comp, " ", "| tar -xf - -C ", tmp_dir)
+          system(cmd)
+        }
       check_columns(c("machine_name", "date"), query)
-      query <- build_query(result_dir, query, index_file)
+      message("building query")
+      pattern <- ".*\\.db"
+
+      system.time(
+      query <- build_query(result_dir, query, index_file, pattern = pattern)
+      )
     }
 
+    message("copying query")
     check_columns("path", query)
     out <- data.table::copy(data.table::as.data.table(query))
     #fixme check uniqueness of file/use path as key?
+
+    message("creating path and experiment_id columns")
     out[, path := as.character(path)]
     out[, experiment_id := basename(path)]
 
@@ -98,7 +115,8 @@ link_ethoscope_metadata <- function(x, result_dir=NULL, index_file=NULL){
   else{
     stop("Unexpected `x` argument!")
   }
-
+  message("removing duplicate metadata i.e. rows corresponding to the same fly (equal experiment_id and region_id)")
+  system.time({
   check_columns(c("experiment_id","region_id","path"), out)
   data.table::setkeyv(out,c("experiment_id", "region_id"))
   out[,n:=.N,keyby=key(out)]
@@ -113,8 +131,11 @@ link_ethoscope_metadata <- function(x, result_dir=NULL, index_file=NULL){
     }
 
   }
+  })
 
-  #out[, id := as.factor(sprintf("%02d|%s",region_id,experiment_id))]
+  message("creating id column and cleaning up")
+  system.time({
+    #out[, id := as.factor(sprintf("%02d|%s",region_id,experiment_id))]
   out[, id := as.factor(sprintf("%s|%02d",substr(experiment_id,1,26), region_id))]
 
   file_info <- out[,.(file_info =  list(list(path = path, file = basename(path)))), by="id"]
@@ -123,6 +144,7 @@ link_ethoscope_metadata <- function(x, result_dir=NULL, index_file=NULL){
   out[, n := NULL]
   out[, experiment_id := NULL]
   data.table::setkeyv(out, "id")
+  })
 
   return(out)
 }
