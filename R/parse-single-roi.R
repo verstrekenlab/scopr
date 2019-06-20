@@ -8,12 +8,12 @@ parse_single_roi <- function(data,
                         columns = NULL,
                         cache=NULL,
                         FUN = NULL,
+                        FUN_filter = NULL,
                         ...){
   roi_idx = NULL
   id <- data$id
   region_id <- data$region_id
   path <- data$file_info[[1]]$path
-
 
   # we get the columns to get from the method used itself
   if(is.null(columns) & !is.null(FUN)){
@@ -45,10 +45,13 @@ parse_single_roi <- function(data,
                                  columns,
                                  file_size= fs,
                                  FUN,
+                                 FUN_filter,
                                  ...
                                  )
   if(!is.null(out))
     behavr::setbehavr(out, data)
+
+
   out
 }
 
@@ -61,6 +64,7 @@ parse_single_roi_wrapped <- function(id, region_id,path,
                                      columns = NULL,
                                      file_size=0,
                                      FUN = NULL,
+                                     FUN_filter = NULL,
                                      ...
                                      ){
   time_stamp = NULL
@@ -87,7 +91,12 @@ parse_single_roi_wrapped <- function(id, region_id,path,
   met <- data.table::data.table(id = id, key="id")
   behavr::setbehavr(out, met)
 
+  if(!is.null(FUN_filter))
+    out <- FUN_filter(out, ...)
+
   if(!is.null(FUN)){
+
+
     out <- FUN(out,...)
 
     is_empty <- is.null(out)

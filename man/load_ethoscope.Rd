@@ -6,7 +6,7 @@
 \usage{
 load_ethoscope(metadata, min_time = 0, max_time = Inf,
   reference_hour = NULL, verbose = TRUE, columns = NULL,
-  cache = NULL, ncores = 1, FUN = NULL, ...)
+  cache = NULL, ncores = 1, FUN = NULL, FUN_filter = NULL, ...)
 }
 \arguments{
 \item{metadata}{\link[data.table:data.table]{data.table::data.table} used to load data (see detail)}
@@ -78,6 +78,7 @@ dt
 }
 }
 \seealso{
+Take the mode of a distribution
 \itemize{
 \item \link[behavr:behavr]{behavr::behavr} -- to understand the output format
 \item \link{experiment_info} -- to show information about a file/experiment

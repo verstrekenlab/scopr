@@ -48,6 +48,7 @@
 #' dt
 #'
 #' @seealso
+#' Take the mode of a distribution
 #' * [behavr::behavr] -- to understand the output format
 #' * [experiment_info] -- to show information about a file/experiment
 #' * [list_result_files] -- to list available files
@@ -63,6 +64,7 @@ load_ethoscope <- function(   metadata,
                               cache = NULL,
                               ncores = 1,
                               FUN = NULL,
+                              FUN_filter = NULL,
                               ...){
 
   file_info = NULL
@@ -81,7 +83,7 @@ load_ethoscope <- function(   metadata,
                    verbose = verbose,
                    columns=columns,
                    cache=cache,
-                   FUN,...)
+                   FUN, FUN_filter, ...)
     behavr::bind_behavr_list(l_dt)
   }
   #
