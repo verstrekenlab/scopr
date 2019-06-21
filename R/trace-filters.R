@@ -25,7 +25,7 @@ Mode_filter <- function(data, window_width=10) {
                  by = id]
   }
 
-  null_distance_lg10x1000 <- round(1000*log10(3e-4))
+  null_distance_log10x1000 <- round(1000*log10(3e-4))
   data[which(x[-1] - x[-(.N)] == 0), xy_dist_log10x1000 := null_distance_log10x1000]
 
   return(data)
