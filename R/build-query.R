@@ -1,4 +1,5 @@
 #' @noRd
+#' @import data.table
 build_query <- function(result_dir,
                         query = NULL,
                         # use_cached = FALSE,
@@ -6,7 +7,9 @@ build_query <- function(result_dir,
                         ) {
   data = .SD = .N = time = n = machine_name = datetime = path = NULL
   files_info <- list_result_files(result_dir, index_file)
-  unique_fi = files_info[,.SD[.N],by=key(files_info)]
+  mykey <- data.table::key(files_info)
+
+  unique_fi = files_info[,.SD[.N],by=mykey]
 
   key <- c("date", "time","machine_name")
 

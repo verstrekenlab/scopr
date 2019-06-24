@@ -119,7 +119,8 @@ link_ethoscope_metadata <- function(x, result_dir=NULL, result_comp = NULL, inde
   system.time({
   check_columns(c("experiment_id","region_id","path"), out)
   data.table::setkeyv(out,c("experiment_id", "region_id"))
-  out[,n:=.N,keyby=key(out)]
+  out[,n:=.N, by = .(data.table::key(out))]
+
   out <- unique(out, by = c(data.table::key(out)))
   duplicated_rows <- out[n>1]
 

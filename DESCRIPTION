@@ -20,7 +20,8 @@ Imports:
   readr,
   stringr,
   RSQLite,
-  memoise
+  memoise,
+  zoo
 Suggests: 
     testthat,
     covr,

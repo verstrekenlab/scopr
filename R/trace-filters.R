@@ -14,14 +14,14 @@ Mode <- function(x) {
 Mode_filter <- function(data, window_width=10) {
 
   if("y" %in% colnames(data)) {
-    data <- data[, `:=`(x = rollapply(x, FUN = Mode, width = window_width, partial = T),
-                        y = rollapply(y, FUN = Mode, width = window_width, partial = T)
+    data <- data[, `:=`(x = zoo::rollapply(x, FUN = Mode, width = window_width, partial = T),
+                        y = zoo::rollapply(y, FUN = Mode, width = window_width, partial = T)
     ), by = id]
 
 
 
   } else {
-    data <- data[, `:=`(x = rollapply(x, FUN = Mode, width = window_width, partial = T)),
+    data <- data[, `:=`(x = zoo::rollapply(x, FUN = Mode, width = window_width, partial = T)),
                  by = id]
   }
 
