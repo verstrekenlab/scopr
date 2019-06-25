@@ -118,8 +118,15 @@ link_ethoscope_metadata <- function(x, result_dir=NULL, result_comp = NULL, inde
   message("removing duplicate metadata i.e. rows corresponding to the same fly (equal experiment_id and region_id)")
   system.time({
   check_columns(c("experiment_id","region_id","path"), out)
-  data.table::setkeyv(out,c("experiment_id", "region_id"))
-  out[,n:=.N,keyby=key(out)]
+  out_keys <- c("experiment_id", "region_id")
+
+  data.table::setkeyv(out,out_keys)
+  filename <- format(Sys.time(),'%Y%m%d_%H%M%S')
+
+  # data.table::fwrite(x = out, file = file.path('~', paste0(filename, '.csv')))
+  # save(out,file =  file.path('~', paste0(filename, '.rda')))
+
+  out[,n:=.N,keyby=out_keys]
 
   # out[,n:=.N, keyby = data.table::key(out)]
   # out
