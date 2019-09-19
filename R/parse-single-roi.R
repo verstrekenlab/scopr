@@ -49,7 +49,7 @@ parse_single_roi <- function(data,
                                  ...
                                  )
   if(!is.null(out))
-    behavr::setbehavr(out, data)
+    fslbehavr::setbehavr(out, data)
 
 
   out
@@ -89,7 +89,7 @@ parse_single_roi_wrapped <- function(id, region_id,path,
   data.table::setcolorder(out,c("id", old_cols))
   data.table::setkeyv(out, "id")
   met <- data.table::data.table(id = id, key="id")
-  behavr::setbehavr(out, met)
+  fslbehavr::setbehavr(out, met)
 
   if(!is.null(FUN_filter))
     out <- FUN_filter(out, ...)

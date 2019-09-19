@@ -2,7 +2,7 @@
 #'
 #' This function is used to import behavioural data generated
 #' by the [ethoscope platform](http://gilestrolab.github.io/ethoscope/).
-#' That is it loads multiple `.db` files into a single `R` [behavr::behavr] table.
+#' That is it loads multiple `.db` files into a single `R` [fslbehavr::behavr] table.
 #'
 #' @param metadata [data.table::data.table] used to load data (see detail)
 #' @param min_time,max_time load only data between `min_time` and `max_time` (in seconds).
@@ -49,7 +49,7 @@
 #'
 #' @seealso
 #' Take the mode of a distribution
-#' * [behavr::behavr] -- to understand the output format
+#' * [fslbehavr::behavr] -- to understand the output format
 #' * [experiment_info] -- to show information about a file/experiment
 #' * [list_result_files] -- to list available files
 #' @references
@@ -84,7 +84,7 @@ load_ethoscope <- function(   metadata,
                    columns=columns,
                    cache=cache,
                    FUN, FUN_filter, ...)
-    behavr::bind_behavr_list(l_dt)
+    fslbehavr::bind_behavr_list(l_dt)
   }
   #
 
@@ -104,7 +104,7 @@ load_ethoscope <- function(   metadata,
     l_dt <- parallel::mclapply(q_l, load_fun, mc.cores=ncores)
   }
 
-  dt <- behavr::bind_behavr_list(l_dt)
+  dt <- fslbehavr::bind_behavr_list(l_dt)
   rm(l_dt)
   # we can force R to garbage collect, making memory avalable:
   gc()
