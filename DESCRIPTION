@@ -1,4 +1,4 @@
-Package: scopr
+Package: fslscopr
 Title: Read Ethoscope Data
 Date: 2018-05-26
 Version: 0.3.2
@@ -14,7 +14,7 @@ Description: Handling of behavioural data from the Ethoscope platform
     This package is part of the rethomics framework <http://rethomics.github.io/>.
 Depends: 
     R (>= 3.00),
-    behavr
+    fslbehavr
 Imports: 
   data.table,
   readr,
@@ -26,12 +26,12 @@ Suggests:
     testthat,
     covr,
     knitr,
-    ggetho,
+    fslggetho,
     zeitgebr
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-URL: https://github.com/rethomics/scopr
-BugReports: https://github.com/rethomics/scopr/issues
+URL: https://gitlab.com/flysleeplab/fsl-retho/scopr
+BugReports: https://gitlab.com/flysleeplab/fsl-retho/scopr/issues
 RoxygenNote: 6.1.1
 Roxygen: list(markdown = TRUE)
