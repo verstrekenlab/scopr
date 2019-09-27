@@ -45,7 +45,7 @@ Distance units (e.g. xy position, height/width) are expressed as a fraction of t
 \description{
 This function is used to import behavioural data generated
 by the \href{http://gilestrolab.github.io/ethoscope/}{ethoscope platform}.
-That is it loads multiple \code{.db} files into a single \code{R} \link[behavr:behavr]{behavr::behavr} table.
+That is it loads multiple \code{.db} files into a single \code{R} \link[behavr:behavr]{fslbehavr::behavr} table.
 }
 \details{
 the linked metadata should be generated using \link{link_ethoscope_metadata}.
@@ -80,7 +80,7 @@ dt
 \seealso{
 Take the mode of a distribution
 \itemize{
-\item \link[behavr:behavr]{behavr::behavr} -- to understand the output format
+\item \link[behavr:behavr]{fslbehavr::behavr} -- to understand the output format
 \item \link{experiment_info} -- to show information about a file/experiment
 \item \link{list_result_files} -- to list available files
 }

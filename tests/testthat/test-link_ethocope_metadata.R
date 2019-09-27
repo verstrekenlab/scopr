@@ -91,6 +91,6 @@ test_that("link_ethoscope_metadata detect duplicated rows", {
   # duplicate
   query[machine_name=="E_029" & region_id==3, region_id := 2]
 
-  expect_warning(out <- scopr:::link_ethoscope_metadata(query, dir), "Duplicated row")
+  expect_warning(out <- scopr::link_ethoscope_metadata(query, dir), "Duplicated row")
   expect_equal(nrow(out), 3*3-1)
 })
