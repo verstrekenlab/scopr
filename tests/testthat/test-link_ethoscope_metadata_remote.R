@@ -11,13 +11,13 @@ test_that("link_ethoscope_metadata_remote with date and machine name", {
   )
   result_dir <- tempdir()
 
-  out1 <- scopr::link_ethoscope_metadata_remote(query,
+  out1 <- fslscopr::link_ethoscope_metadata_remote(query,
                                      remote_dir = remote_dir,
                                      result_dir = result_dir,
                                      overwrite_local = TRUE,
                                      verbose=F)
 ?data.table::fread
-  out2 <- scopr::link_ethoscope_metadata(query,
+  out2 <- fslscopr::link_ethoscope_metadata(query,
                               dir)
 
   dt1 <- load_ethoscope(out1, verbose=F)
@@ -48,7 +48,7 @@ test_that("parse_query with date, machine name, and ROIs", {
   query[, treatment := rep(1:3, length.out=.N)]
 
   result_dir <- tempdir()
-  out1 <- scopr::link_ethoscope_metadata_remote(query,
+  out1 <- fslscopr::link_ethoscope_metadata_remote(query,
                                      remote_dir = remote_dir,
                                      result_dir = result_dir,
                                      overwrite_local = TRUE,
@@ -56,7 +56,7 @@ test_that("parse_query with date, machine name, and ROIs", {
 
 
 
-  out2 <- scopr::link_ethoscope_metadata(query,
+  out2 <- fslscopr::link_ethoscope_metadata(query,
                               dir)
 
   dt1 <- load_ethoscope(out1, verbose=F)
