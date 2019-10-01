@@ -1,4 +1,4 @@
 library(testthat)
-library(scopr)
+libary(fslscopr)
 
-test_check("scopr")
+test_check("fslscopr")
