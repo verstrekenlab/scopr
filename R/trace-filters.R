@@ -1,4 +1,5 @@
 #' Take the mode of a distribution
+#' @export
 Mode <- function(x) {
   ux <- unique(x)
   tabulation <- tabulate(match(x, ux))
