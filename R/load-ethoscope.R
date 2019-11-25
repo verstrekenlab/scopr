@@ -65,11 +65,16 @@ load_ethoscope <- function(   metadata,
                               ncores = 1,
                               FUN = NULL,
                               FUN_filter = NULL,
+                              progress = NULL,
                               ...){
 
   file_info = NULL
+
   # takes a part of a metadata and et the corresponding data
-  load_fun <- function(q){
+  load_fun <- function(q, progress=NULL, total_count=NULL){
+
+
+
     # Each row of metadata refers to a unique ROI. to each ROI we apply the function `parse_single_roi`
     # and get each ROI in a dt.
     # So, l_dt is a list of data tables, one per ROI. If no data is availeble, the list element is `NULL`.
@@ -83,17 +88,22 @@ load_ethoscope <- function(   metadata,
                    verbose = verbose,
                    columns=columns,
                    cache=cache,
-                   FUN, FUN_filter, ...)
+                   FUN, FUN_filter,
+                   progress,
+                   total_count,
+                   ...)
     fslbehavr::bind_behavr_list(l_dt)
   }
   #
 
 
   experiment_id <- metadata[, sapply(file_info, function(x) x$path)]
+  metadata$fly_count <- as.integer(rownames(metadata))
   q_l <- split(metadata, experiment_id)
+  total_count <- nrow(do.call(what = rbind, q_l))
 
   if(ncores == 1){
-    l_dt <- lapply(q_l, load_fun)
+    l_dt <- lapply(1:length(q_l), function(i) load_fun(q_l[[i]], progress, total_count))
   }
   else{
     if (!requireNamespace("parallel", quietly = TRUE)) {
@@ -101,7 +111,7 @@ load_ethoscope <- function(   metadata,
            Please install it.",
            call. = FALSE)
     }
-    l_dt <- parallel::mclapply(q_l, load_fun, mc.cores=ncores)
+    l_dt <- parallel::mclapply(1:length(q_l), function(i) load_fun(q_l[[i]], progress, total_count), mc.cores=ncores)
   }
 
   dt <- fslbehavr::bind_behavr_list(l_dt)

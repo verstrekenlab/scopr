@@ -9,6 +9,8 @@ parse_single_roi <- function(data,
                         cache=NULL,
                         FUN = NULL,
                         FUN_filter = NULL,
+                        progress = NULL,
+                        total_count,
                         ...){
   roi_idx = NULL
   id <- data$id
@@ -21,8 +23,17 @@ parse_single_roi <- function(data,
     if(!is.null(needed_columns))
       columns <- needed_columns(...)
   }
-  if(verbose)
-    cat(sprintf("Loading ROI number %i from:\n\t%s\n",region_id,path))
+  if(verbose) {
+    info_message <- sprintf("Loading ROI number %i",region_id)
+
+    info_message_complete <- sprintf("%s from:\n\t%s\n", info_message, path)
+    cat(info_message_complete)
+    if (requireNamespace("shiny", quietly = TRUE) & !is.null(progress)) {
+      browser()
+      progress$set(value=data$fly_count/total_count, detail=info_message)
+    }
+  }
+
   if(tools::file_ext(path) != "db")
     stop(sprintf("Unsuported file extention in %s",path))
 
@@ -52,7 +63,9 @@ parse_single_roi <- function(data,
     fslbehavr::setbehavr(out, data)
 
 
+
   out
+
 }
 
 

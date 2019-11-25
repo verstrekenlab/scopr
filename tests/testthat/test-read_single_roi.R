@@ -1,7 +1,9 @@
 context("read_single_roi")
 
+
 test_that("read_single_roi fails when expected", {
   dir <- scopr_example_dir()
+
   test_file <- paste(dir, "ethoscope_results/029/E_029/2016-01-25_21-14-55/2016-01-25_21-14-55_029.db",sep="/")
 
   expect_warning(a <- fslscopr::read_single_roi(test_file,region_id = 90), "does not exist")

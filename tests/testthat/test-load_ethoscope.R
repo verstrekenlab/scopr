@@ -1,5 +1,6 @@
 context("load_ethoscope")
 
+
 test_that("query ethoscopes functions", {
   dir <- paste0(scopr_example_dir(), "/ethoscope_results/")
 

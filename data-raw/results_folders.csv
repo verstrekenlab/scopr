@@ -1,0 +1,5 @@
+username,hostname,ethoscope_results,dam_results
+antortjim,bhlab,/media/antortjim/data/antortjim/ethoscope_results/,/media/antortjim/data/antortjim/DAM_results
+#antortjim,antortjim-GL552VW,/home/antortjim/1TB/FlySleepLab_nonsync/my_ethoscope/my_ethoscope_results/ethoscope_results,/home/antortjim/1TB/FlySleepLab_nonsync/DAM_results
+antortjim,antortjim-GL552VW,/home/antortjim/1TB/Gitlab/FSL-Retho/rethogui/fslscopr/inst/extdata/ethoscope_results,/home/antortjim/1TB/FlySleepLab_nonsync/DAM_results
+vibflysleep,cvserver,/media/vibflysleep/4.0 TB Hard Disk/ethoscope_results,/media/vibflysleep/4.0 TB Hard Disk/DAM_results
