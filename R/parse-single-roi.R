@@ -29,7 +29,6 @@ parse_single_roi <- function(data,
     info_message_complete <- sprintf("%s from:\n\t%s\n", info_message, path)
     cat(info_message_complete)
     if (requireNamespace("shiny", quietly = TRUE) & !is.null(progress)) {
-      browser()
       progress$set(value=data$fly_count/total_count, detail=info_message)
     }
   }
