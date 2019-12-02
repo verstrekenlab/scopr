@@ -6,7 +6,8 @@
 \usage{
 load_ethoscope(metadata, min_time = 0, max_time = Inf,
   reference_hour = NULL, verbose = TRUE, columns = NULL,
-  cache = NULL, ncores = 1, FUN = NULL, FUN_filter = NULL, ...)
+  cache = NULL, ncores = 1, FUN = NULL, FUN_filter = NULL,
+  progress = NULL, ...)
 }
 \arguments{
 \item{metadata}{\link[data.table:data.table]{data.table::data.table} used to load data (see detail)}
