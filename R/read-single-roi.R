@@ -1,24 +1,19 @@
 #' @importFrom glue glue
+#' @importFrom feather read_feather
 read_single_roi <- function( FILE,
                              region_id,
                              min_time = 0,
                              max_time = +Inf,
                              reference_hour = NULL,
                              columns = NULL,
-                             time_stamp=NULL # only used for memoisation
+                             time_stamp=NULL, # only used for memoisation
+                             feather_interface = FALSE
                              ){
 
   roi_idx = var_name = rois_idx = id = w = h = functional_type = sql_type = is_inferred = has_interacted = NULL
   experiment_info <- experiment_info(FILE)
 
   # stringr::str_match(string = basename(feather_path), pattern = "(20\\d\\d-\\d\\d-\\d\\d_\\d\\d-\\d\\d-\\d\\d_\\w{32})_ROI_(\\d{1,2}).feather")
-  dbfile <- basename(FILE)
-  prefix <- stringr::str_match(string = exp_folder, pattern = "(20\\d\\d-\\d\\d-\\d\\d_\\d\\d-\\d\\d-\\d\\d_\\w{32}).db")[,2]
-  feather_path <- file.path(dirname(FILE), glue::glue("{prefix}_ROI_{region_id}.feather"))
-  df <- feather::read_feather(feather_path)
-
-
-
 
   if(min_time >= max_time)
     stop("min_time can only be lower than max_time!")
@@ -59,8 +54,15 @@ read_single_roi <- function( FILE,
     sql_query <- sprintf("SELECT %s FROM ROI_%i WHERE t >= %e %s",
                          selected_cols, region_id,
                          min_time, max_time_condition )
-    result <- RSQLite::dbGetQuery(con, sql_query)
 
+    if(feather_interface) {
+      dbfile <- basename(FILE)
+      prefix <- stringr::str_match(string = exp_folder, pattern = "(20\\d\\d-\\d\\d-\\d\\d_\\d\\d-\\d\\d-\\d\\d_\\w{32}).db")[,2]
+      feather_path <- file.path(dirname(FILE), glue::glue("{prefix}_ROI_{region_id}.feather"))
+      result <- feather::read_feather(feather_path)[t > min_time & t < max_time, ..selected_columns]
+    } else {
+      result <- RSQLite::dbGetQuery(con, sql_query)
+    }
     # todo here, use setDT!!
     # however, bottlenexk is sqlite 10times slower than reading equivalent csv!!!!
     roi_dt <- data.table::as.data.table(result)
