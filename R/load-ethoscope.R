@@ -66,6 +66,7 @@ load_ethoscope <- function(   metadata,
                               FUN = NULL,
                               FUN_filter = NULL,
                               progress = NULL,
+                              feather_interface = FALSE,
                               ...){
 
   file_info = NULL
@@ -91,6 +92,7 @@ load_ethoscope <- function(   metadata,
                    FUN, FUN_filter,
                    progress,
                    total_count,
+                   feather_interface = feather_interface,
                    ...)
     fslbehavr::bind_behavr_list(l_dt)
   }

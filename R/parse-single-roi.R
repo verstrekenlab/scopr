@@ -11,6 +11,7 @@ parse_single_roi <- function(data,
                         FUN_filter = NULL,
                         progress = NULL,
                         total_count,
+                        feather_interface = FALSE,
                         ...){
   roi_idx = NULL
   id <- data$id
@@ -56,6 +57,7 @@ parse_single_roi <- function(data,
                                  file_size= fs,
                                  FUN,
                                  FUN_filter,
+                                 feather_interface = feather_interface,
                                  ...
                                  )
   if(!is.null(out))
@@ -77,6 +79,7 @@ parse_single_roi_wrapped <- function(id, region_id,path,
                                      file_size=0,
                                      FUN = NULL,
                                      FUN_filter = NULL,
+                                     feather_interface = FALSE,
                                      ...
                                      ){
   time_stamp = NULL
@@ -86,7 +89,9 @@ parse_single_roi_wrapped <- function(id, region_id,path,
                          max_time = max_time,
                          reference_hour = reference_hour,
                          columns=columns,
-                         time_stamp = time_stamp)
+                         time_stamp = time_stamp,
+                         feather_interface = feather_interface
+                         )
 
   if(is.null(out) || nrow(out) == 0){
     warning(sprintf("No data in ROI %i, from FILE %s. Skipping",region_id, path))
