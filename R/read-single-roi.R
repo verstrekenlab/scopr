@@ -1,3 +1,22 @@
+read_rds_file <- function(rds_path, min_time, max_time, selected_cols) {
+  result <- as.data.table(readRDS(rds_path))
+  column_names <- colnames(result)
+  if("t" %in% column_names) result$t <- as.integer(result$t)
+  if("x" %in% column_names) result$x <- as.integer(result$x)
+  if("y" %in% column_names) result$y <- as.integer(result$y)
+  if("w" %in% column_names) result$w <- as.integer(result$w)
+  if("h" %in% column_names) result$h <- as.integer(result$h)
+  if("phi" %in% column_names) result$phi <- as.integer(result$phi)
+  if("xy_dist_log10x1000" %in% column_names) result$xy_dist_log10x1000 <- as.numeric(result$xy_dist_log10x1000)
+  if("is_inferred" %in% column_names) result$is_inferred <- as.integer(result$is_inferred)
+  if("has_interacted" %in% column_names) result$has_interacted <- as.integer(result$has_interacted)
+  res <- result[t > min_time & t < max_time,]
+  if(selected_cols != '*') {
+    res <- res[, ..selected_cols]
+  }
+  return(res)
+}
+
 #' @importFrom glue glue
 #' @importFrom feather read_feather
 read_single_roi <- function( FILE,
@@ -7,7 +26,8 @@ read_single_roi <- function( FILE,
                              reference_hour = NULL,
                              columns = NULL,
                              time_stamp=NULL, # only used for memoisation
-                             feather_interface = FALSE
+                             feather_interface = FALSE,
+                             rds_interface = FALSE
                              ){
 
   roi_idx = var_name = rois_idx = id = w = h = functional_type = sql_type = is_inferred = has_interacted = NULL
@@ -50,17 +70,42 @@ read_single_roi <- function( FILE,
       var_map <- var_map[columns]
       data.table::setkey(var_map, var_name)
     }
-    # todo filter here is inferred
-    sql_query <- sprintf("SELECT %s FROM ROI_%i WHERE t >= %e %s",
-                         selected_cols, region_id,
-                         min_time, max_time_condition )
+
 
     if(feather_interface) {
+      logging::loginfo('Using feather interface')
       dbfile <- basename(FILE)
-      prefix <- stringr::str_match(string = exp_folder, pattern = "(20\\d\\d-\\d\\d-\\d\\d_\\d\\d-\\d\\d-\\d\\d_\\w{32}).db")[,2]
+      exp_folder <- dirname(FILE)
+      prefix <- stringr::str_match(string = dbfile, pattern = "(20\\d\\d-\\d\\d-\\d\\d_\\d\\d-\\d\\d-\\d\\d_\\w{32}).db")[,2]
       feather_path <- file.path(dirname(FILE), glue::glue("{prefix}_ROI_{region_id}.feather"))
-      result <- feather::read_feather(feather_path)[t > min_time & t < max_time, ..selected_columns]
-    } else {
+      if(selected_cols == '*') {
+        result <- feather::read_feather(feather_path)[t > min_time & t < max_time,]
+      } else {
+        result <- feather::read_feather(feather_path)[t > min_time & t < max_time, ..selected_cols]
+      }
+    } else if (rds_interface) {
+      logging::loginfo('Using rds interface')
+      logging::loginfo(FILE)
+      dbfile <- basename(FILE)
+      # exp_folder <- dirname(FILE)
+      prefix <- stringr::str_match(string = dbfile, pattern = "(20\\d\\d-\\d\\d-\\d\\d_\\d\\d-\\d\\d-\\d\\d_\\w{32}).db")[,2]
+      rds_path <- file.path(dirname(FILE), glue::glue("{prefix}_ROI_{region_id}.rds"))
+      result <- tryCatch(
+        read_rds_file(rds_path, min_time, max_time, selected_cols),
+        error = function(e) {
+          # browser()
+          logging::logwarn(e)
+          rds_interface <<- F
+          # browser()
+          })
+    }
+
+    if (!feather_interface & !rds_interface) {
+      # todo filter here is inferred
+      sql_query <- sprintf("SELECT %s FROM ROI_%i WHERE t >= %e %s",
+                           selected_cols, region_id,
+                           min_time, max_time_condition )
+
       result <- RSQLite::dbGetQuery(con, sql_query)
     }
     # todo here, use setDT!!
