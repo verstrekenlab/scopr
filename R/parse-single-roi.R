@@ -117,6 +117,8 @@ parse_single_roi_wrapped <- function(id, region_id,path,
 
   if(!is.null(FUN)){
 
+    if(!is.list(FUN)) {stop('Please pass a list of functions, even if only one')}
+
     list_of_outs <- list()
     i <- 1
     for (FU in FUN) {
@@ -155,7 +157,7 @@ parse_single_roi_wrapped <- function(id, region_id,path,
       }
     }
   }
-  
+
   setkey(out, 'id')
   fslbehavr::setmeta(out, metadata)
   # out <- out[!duplicated(out),]
