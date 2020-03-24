@@ -115,11 +115,12 @@ parse_single_roi_wrapped <- function(id, region_id,path,
   if(!is.null(FUN_filter))
     out <- FUN_filter(out, ...)
 
+  list_of_outs <- list()
+  
   if(!is.null(FUN)){
 
-    if(!is.list(FUN)) {stop('Please pass a list of functions, even if only one')}
+    if(is.function(FUN)) {FUN <- list(FUN)} else {stop('Please pass a list of functions, even if only one')}
 
-    list_of_outs <- list()
     i <- 1
     for (FU in FUN) {
 
@@ -142,6 +143,8 @@ parse_single_roi_wrapped <- function(id, region_id,path,
       logging::logdebug(glue::glue('Done with annotation function #{i}'))
       i <- i + 1
     }
+  } else {
+    list_of_outs[[1]] <- out
   }
 
   metadata <- fslbehavr::meta(list_of_outs[[1]])
