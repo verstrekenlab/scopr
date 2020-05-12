@@ -2,10 +2,18 @@
 #' @param FILE the name of the input file
 #' @return an integer vector
 #' @noRd
+#' @importFrom logging logerror
+#' @importFrom glue glue
 list_all_rois <- function(FILE){
   roi_idx = NULL
   tryCatch({
-    con <- RSQLite::dbConnect(RSQLite::SQLite(), FILE, flags=RSQLite::SQLITE_RO)
+    tryCatch({
+      con <- RSQLite::dbConnect(RSQLite::SQLite(), FILE, flags=RSQLite::SQLITE_RO)
+    }, error = function(e) {
+      logging::error(glue::glue("I cant establish a connection with file {FILE}"))
+      logging::error("Does it exist? Do I have reading permission?")
+      logging::logerror(e)
+    })
     roi_map <- data.table::as.data.table(RSQLite::dbGetQuery(con, "SELECT * FROM ROI_MAP"))
   },
   finally = {
