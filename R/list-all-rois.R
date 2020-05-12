@@ -10,8 +10,10 @@ list_all_rois <- function(FILE){
     tryCatch({
       con <- RSQLite::dbConnect(RSQLite::SQLite(), FILE, flags=RSQLite::SQLITE_RO)
     }, error = function(e) {
-      logging::logerror(glue::glue("I cant establish a connection with file {FILE}"))
-      logging::logerror("Does it exist? Do I have reading permission?")
+      logging::loginfo(glue::glue("I cant establish a connection with FILE={FILE}"))
+      logging::loginfo("This is the line causing trouble")
+      logging::loginfo(glue::glue("RSQLite::dbConnect(RSQLite::SQLite(), FILE, flags=RSQLite::SQLITE_RO)"))
+      logging::loginfo("Does it exist? Do I have reading permission? See the error log below")
       logging::logerror(e)
     })
     roi_map <- data.table::as.data.table(RSQLite::dbGetQuery(con, "SELECT * FROM ROI_MAP"))
