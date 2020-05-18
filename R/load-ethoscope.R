@@ -66,7 +66,6 @@ load_ethoscope <- function(   metadata,
                               FUN = NULL,
                               FUN_filter = NULL,
                               progress = NULL,
-                              feather_interface = FALSE,
                               rds_interface = FALSE,
                               ...){
 
@@ -74,7 +73,6 @@ load_ethoscope <- function(   metadata,
 
   # takes a part of a metadata and et the corresponding data
   load_fun <- function(q, progress=NULL, total_count=NULL){
-
 
 
     # Each row of metadata refers to a unique ROI. to each ROI we apply the function `parse_single_roi`
@@ -93,7 +91,6 @@ load_ethoscope <- function(   metadata,
                    FUN, FUN_filter,
                    progress,
                    total_count,
-                   feather_interface = feather_interface,
                    rds_interface = rds_interface,
                    ...)
     fslbehavr::bind_behavr_list(l_dt)

@@ -11,7 +11,6 @@ parse_single_roi <- function(data,
                         FUN_filter = NULL,
                         progress = NULL,
                         total_count,
-                        feather_interface = FALSE,
                         rds_interface = FALSE,
                         ...){
   roi_idx = NULL
@@ -58,7 +57,6 @@ parse_single_roi <- function(data,
                                  file_size= fs,
                                  FUN,
                                  FUN_filter,
-                                 feather_interface = feather_interface,
                                  rds_interface = rds_interface,
                                  ...
                                  )
@@ -81,7 +79,6 @@ parse_single_roi_wrapped <- function(id, region_id,path,
                                      file_size=0,
                                      FUN = NULL,
                                      FUN_filter = NULL,
-                                     feather_interface = FALSE,
                                      rds_interface = FALSE,
                                      ...
                                      ){
@@ -93,7 +90,6 @@ parse_single_roi_wrapped <- function(id, region_id,path,
                          reference_hour = reference_hour,
                          columns=columns,
                          time_stamp = time_stamp,
-                         feather_interface = feather_interface,
                          rds_interface = rds_interface
                          )
 

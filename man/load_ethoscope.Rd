@@ -16,7 +16,6 @@ load_ethoscope(
   FUN = NULL,
   FUN_filter = NULL,
   progress = NULL,
-  feather_interface = FALSE,
   rds_interface = FALSE,
   ...
 )

@@ -18,7 +18,6 @@ read_rds_file <- function(rds_path, min_time, max_time, selected_cols) {
 }
 
 #' @importFrom glue glue
-#' @importFrom feather read_feather
 read_single_roi <- function( FILE,
                              region_id,
                              min_time = 0,
@@ -26,14 +25,12 @@ read_single_roi <- function( FILE,
                              reference_hour = NULL,
                              columns = NULL,
                              time_stamp=NULL, # only used for memoisation
-                             feather_interface = FALSE,
                              rds_interface = FALSE
                              ){
 
   roi_idx = var_name = rois_idx = id = w = h = functional_type = sql_type = is_inferred = has_interacted = NULL
   experiment_info <- experiment_info(FILE)
 
-  # stringr::str_match(string = basename(feather_path), pattern = "(20\\d\\d-\\d\\d-\\d\\d_\\d\\d-\\d\\d-\\d\\d_\\w{32})_ROI_(\\d{1,2}).feather")
 
   if(min_time >= max_time)
     stop("min_time can only be lower than max_time!")
@@ -71,19 +68,7 @@ read_single_roi <- function( FILE,
       data.table::setkey(var_map, var_name)
     }
 
-
-    if(feather_interface) {
-      logging::loginfo('Using feather interface')
-      dbfile <- basename(FILE)
-      exp_folder <- dirname(FILE)
-      prefix <- stringr::str_match(string = dbfile, pattern = "(20\\d\\d-\\d\\d-\\d\\d_\\d\\d-\\d\\d-\\d\\d_\\w{32}).db")[,2]
-      feather_path <- file.path(dirname(FILE), glue::glue("{prefix}_ROI_{region_id}.feather"))
-      if(selected_cols == '*') {
-        result <- feather::read_feather(feather_path)[t > min_time & t < max_time,]
-      } else {
-        result <- feather::read_feather(feather_path)[t > min_time & t < max_time, ..selected_cols]
-      }
-    } else if (rds_interface) {
+    if (rds_interface) {
       logging::loginfo('Using rds interface')
       logging::loginfo(FILE)
       dbfile <- basename(FILE)
@@ -98,9 +83,8 @@ read_single_roi <- function( FILE,
           rds_interface <<- F
           # browser()
           })
-    }
 
-    if (!feather_interface & !rds_interface) {
+    } else {
       # todo filter here is inferred
       sql_query <- sprintf("SELECT %s FROM ROI_%i WHERE t >= %e %s",
                            selected_cols, region_id,
