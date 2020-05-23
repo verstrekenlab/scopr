@@ -156,18 +156,19 @@ read_single_roi <- function( FILE,
     }
 
     ## ----
-
-    ## 2.5 Adjust the t column by
-    ## * Aligning it to ZT0 if provided via the reference_hour argument
-    ## * Converting it to seconds
-    ## ----
     # TODO here, use setDT!!
     # FIXME however, bottleneck is sqlite 10times slower than reading equivalent csv!!!!
-    roi_dt <- data.table::as.data.table(result)
+    roi_dt <- data.table::setDT(result)
 
     # remove the id column if it is available
     if("id" %in% colnames(roi_dt))
       roi_dt[, id := NULL]
+    ## ----
+
+    ## ----
+    ## 2.5 Adjust the t column by
+    ## * Aligning it to ZT0 if provided via the reference_hour argument
+    ## * Converting it to seconds
 
     # 1. change the reference t0 from the start of the experiment
     # to the user provided reference_hour if available
@@ -191,13 +192,13 @@ read_single_roi <- function( FILE,
       # add that amount to the t column so it becomes aligned with ZT
       # t will reflect the time since ZT0 and NOT since the experiment start
       # convert to seconds
-      roi_dt[, t:= (t + ms_after_ref)/ 1e3 ]
+      roi_dt[, t := (t + ms_after_ref) / 1e3 ]
     }
     else{
       # if no reference_hour available, assume they are already aligned
       # i.e. do nothing
       # convert to seconds
-      roi_dt[, t:= t/1e3]
+      roi_dt[, t := t / 1e3]
     }
     ## ----
 
@@ -216,7 +217,7 @@ read_single_roi <- function( FILE,
 
     # Use these properties and the knowledge in
     # var_map to normalize distances
-    roi_width <- max(c(roi_row[,w], roi_row[,h]))
+    roi_width <- max(c(roi_row[, w], roi_row[, h]))
     for(var_n in var_map$var_name){
       if(var_map[var_n, functional_type] == "distance"){
         roi_dt[, (var_n) := get(var_n) / roi_width]
@@ -247,6 +248,6 @@ read_single_roi <- function( FILE,
     return(roi_dt)
   },
   # Close the SQLite connection
-  finally= {RSQLite::dbDisconnect(con)}
+  finally = { RSQLite::dbDisconnect(con) }
   )
 }

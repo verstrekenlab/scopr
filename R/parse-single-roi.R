@@ -38,7 +38,7 @@ parse_single_roi <- function(data,
     # additionally, if a progress bar is available, update it as well
     # TODO The message is getting update but the value is not
     if (requireNamespace("shiny", quietly = TRUE) & !is.null(progress)) {
-      progress$set(value=data$fly_count/total_count, detail=info_message_complete)
+      progress$set(value = data$fly_count / total_count, detail = info_message_complete)
     }
   }
 
@@ -55,7 +55,7 @@ parse_single_roi <- function(data,
   # to cache the results for faster reloading
   if(!is.null(cache)){
     db <- memoise::cache_filesystem(cache, algo="md5")
-    parse_single_roi_wrapped_memo <- memoise::memoise(parse_single_roi_wrapped, cache=db)
+    parse_single_roi_wrapped_memo <- memoise::memoise(parse_single_roi_wrapped, cache = db)
   } else{
     # otherwise the "cached" version is just the original function
     parse_single_roi_wrapped_memo <- parse_single_roi_wrapped
@@ -105,7 +105,7 @@ parse_single_roi_wrapped <- function(id, region_id, path,
                                      max_time = +Inf,
                                      reference_hour = NULL,
                                      columns = NULL,
-                                     file_size=0,
+                                     file_size = 0,
                                      FUN = NULL,
                                      # FUN_filter = NULL,
                                      rds_interface = FALSE,
@@ -135,7 +135,6 @@ parse_single_roi_wrapped <- function(id, region_id, path,
   }
 
   ## ----
-
   ## Generate the id column of the result of read_single_roi
   ## and make it a behavr table by attaching a temporary metadata
   ## that just contains id
@@ -186,8 +185,11 @@ parse_single_roi_wrapped <- function(id, region_id, path,
       message(sprintf('Running annotation function #%d', i))
 
       # Run the annotation function on the data loaded from SQL
-      # TODO The return value is
-
+      # The return value is a behavr table with data for a single fly
+      # The metadata in this table is a one row table
+      # with a single column called
+      # containing the id of the fly,
+      # as taken from the id column in out
       out_annotated <- FU(out, ...)
 
       # Check if the annotation is empty
