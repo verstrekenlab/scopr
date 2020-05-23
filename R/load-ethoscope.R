@@ -55,71 +55,103 @@
 #' @references
 #' * [behavr tutorial](https://rethomics.github.io/behavr.html) -- how to work with the obtained [behavr] table
 #' @export
-load_ethoscope <- function(   metadata,
-                              min_time = 0,
-                              max_time = Inf,
-                              reference_hour = NULL,
-                              verbose = TRUE,
-                              columns = NULL,
-                              cache = NULL,
-                              ncores = 1,
-                              FUN = NULL,
-                              FUN_filter = NULL,
-                              progress = NULL,
-                              rds_interface = FALSE,
-                              ...){
+load_ethoscope <- function(
+                            metadata,
+                            min_time = 0,
+                            max_time = Inf,
+                            reference_hour = NULL,
+                            verbose = TRUE,
+                            columns = NULL,
+                            cache = NULL,
+                            ncores = 1,
+                            FUN = NULL,
+                            # FUN_filter = NULL, #TODO remove me
+                            progress = NULL,
+                            rds_interface = FALSE,
+                            ...
+                          ){
 
   file_info = NULL
 
-  # takes a part of a metadata and et the corresponding data
-  load_fun <- function(q, progress=NULL, total_count=NULL){
 
-
-    # Each row of metadata refers to a unique ROI. to each ROI we apply the function `parse_single_roi`
-    # and get each ROI in a dt.
-    # So, l_dt is a list of data tables, one per ROI. If no data is availeble, the list element is `NULL`.
-
-    data.table::setkeyv(q, data.table::key(metadata))
-    l_rows <- lapply(1:nrow(q),function(i){q[i,]})
-    l_dt <- lapply(l_rows, parse_single_roi,
-                   min_time = min_time,
-                   max_time = max_time,
-                   reference_hour = reference_hour,
-                   verbose = verbose,
-                   columns=columns,
-                   cache=cache,
-                   FUN, FUN_filter,
-                   progress,
-                   total_count,
-                   rds_interface = rds_interface,
-                   ...)
-    fslbehavr::bind_behavr_list(l_dt)
-  }
-  #
-
-
+  # FIXME Find a better way of counting how many unique flies
+  # are there in the metadata
+  # This probably is suboptimal
   experiment_id <- metadata[, sapply(file_info, function(x) x$path)]
   metadata$fly_count <- as.integer(rownames(metadata))
   q_l <- split(metadata, experiment_id)
   total_count <- nrow(do.call(what = rbind, q_l))
 
-  if(ncores == 1){
-    l_dt <- lapply(1:length(q_l), function(i) load_fun(q_l[[i]], progress, total_count))
+
+  # Declare a closure taking a user provided query
+  # i.e. a metadata table
+  load_fun <- function(q){
+
+    # Each row of metadata refers to a unique fly.
+    # To each row we apply the function `parse_single_roi`
+    # and get the data for the corresponding fly in a behavr table object
+    # So, l_dt is a list of behavr tables, one per fly.
+    # If no data is available for a fly, the list element is `NULL`.
+    data.table::setkeyv(q, data.table::key(metadata))
+
+    # Make the metadata compatible with lapply
+    # by making it a list of rows
+    l_rows <- lapply(1:nrow(q), function(i) { q[i,] })
+    # for each row, call parse_single_roi with the following arguments
+    # min_time, max_time, reference_hour, etc
+    # are taken from the input to load_ethoscope thanks to load_fun
+    # being an enclosure of load_ethoscope
+    parse_wrapper <- function(row){
+      arg_list = list(row,
+                      min_time = min_time,
+                      max_time = max_time,
+                      reference_hour = reference_hour,
+                      verbose = verbose,
+                      columns = columns,
+                      cache = cache,
+                      FUN = FUN,
+                      progress = progress,
+                      total_count = total_count,
+                      rds_interface = rds_interface,
+                      ...
+                      )
+
+      do.call(parse_single_roi, arg_list)
+
+    }
+
+    l_dt <- lapply(l_rows, parse_wrapper)
+
+    # restore a behavr table from a list of behavr tables
+    # by rbinding using id as key
+    fslbehavr::bind_behavr_list(l_dt)
   }
-  else{
-    if (!requireNamespace("parallel", quietly = TRUE)) {
+
+  # Call load_fun in parallel or unithreaded
+  # depending on the value of ncores
+  if(ncores == 1){
+
+    l_dt <- lapply(1:length(q_l), function(i) load_fun(q_l[[i]]))
+
+  } else{
+
+      if (!requireNamespace("parallel", quietly = TRUE)) {
       stop("`parallel` package needed for ncores > 1.
            Please install it.",
            call. = FALSE)
     }
-    l_dt <- parallel::mclapply(1:length(q_l), function(i) load_fun(q_l[[i]], progress, total_count), mc.cores=ncores)
+    l_dt <- parallel::mclapply(1:length(q_l), function(i) load_fun(q_l[[i]]), mc.cores=ncores)
   }
 
+  # TODO Why?
   dt <- fslbehavr::bind_behavr_list(l_dt)
+
+  # Get rid of temporary data containers not needed anymore
+  # Force R to garbage collect, making memory available
   rm(l_dt)
-  # we can force R to garbage collect, making memory avalable:
   gc()
-  dt
+
+  return(dt)
 }
 
 

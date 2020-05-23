@@ -14,7 +14,6 @@ load_ethoscope(
   cache = NULL,
   ncores = 1,
   FUN = NULL,
-  FUN_filter = NULL,
   progress = NULL,
   rds_interface = FALSE,
   ...
