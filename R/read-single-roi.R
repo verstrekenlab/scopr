@@ -24,7 +24,7 @@ read_single_roi <- function( FILE,
                              max_time = +Inf,
                              reference_hour = NULL,
                              columns = NULL,
-                             time_stamp=NULL, # only used for memoisation
+                             time_stamp = NULL, # only used for memoisation
                              rds_interface = FALSE
                              ){
 
@@ -192,6 +192,7 @@ read_single_roi <- function( FILE,
       # add that amount to the t column so it becomes aligned with ZT
       # t will reflect the time since ZT0 and NOT since the experiment start
       # convert to seconds
+      message(sprintf("Adding %d ms to t column of fly %s", ms_after_ref, id))
       roi_dt[, t := (t + ms_after_ref) / 1e3 ]
     }
     else{

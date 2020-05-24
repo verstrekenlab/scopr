@@ -14,6 +14,7 @@ load_ethoscope(
   cache = NULL,
   ncores = 1,
   FUN = NULL,
+  map_arg = NULL,
   progress = NULL,
   rds_interface = FALSE,
   ...
@@ -41,6 +42,8 @@ When \code{NULL} and if \code{FUN} is set, columns can be retrieved automaticall
 \item{FUN}{function (optional) to transform the data from each individual
 immediately after is has been loaded.}
 
+\item{map_arg}{a list to map \code{FUN} arguments to metavariables values. See details}
+
 \item{...}{extra arguments to be passed to \code{FUN}}
 }
 \value{
@@ -60,6 +63,8 @@ That is it loads multiple \code{.db} files into a single \code{R} \link[fslbehav
 }
 \details{
 the linked metadata should be generated using \link{link_ethoscope_metadata}.
+\code{map_arg} is a list of the form \code{list(fun_arg = "metavariable")}.
+When provided, \code{FUN} will set specific arguments (\code{fun_arg}) to the value of a (quoted) metavariable.
 }
 \examples{
 dir <- paste0(scopr_example_dir(), "/ethoscope_results/")

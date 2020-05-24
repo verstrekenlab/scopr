@@ -1,6 +1,7 @@
 # for memoisation
 # we obtain data from one ROI and optionaly preanalyse it, by applying FUN.
 # this function is run on single individual data
+#' @importFrom rlang list2
 parse_single_roi <- function(data,
                         min_time = 0,
                         max_time = +Inf,
@@ -28,6 +29,8 @@ parse_single_roi <- function(data,
     if(!is.null(needed_columns))
       columns <- needed_columns(...)
   }
+
+  columns <- c(columns, rlang::list2(...)$extra_columns)
 
   # if verbose, log some information to the user so he knows
   # a new fly is being loaded (progress tracking)

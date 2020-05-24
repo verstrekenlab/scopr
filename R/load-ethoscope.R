@@ -85,8 +85,6 @@ load_ethoscope <- function(   metadata,
   q_l <- split(metadata, experiment_id)
   total_count <- nrow(do.call(what = rbind, q_l))
 
-  map_arg <- c(map_arg, reference_hour = "reference_hour")
-
   # Declare a closure taking a user provided query
   # i.e. a metadata table
   load_fun <- function(q){
@@ -118,6 +116,17 @@ load_ethoscope <- function(   metadata,
                       rds_interface = rds_interface,
                       ...
                       )
+
+      # if reference_hour is NA, the user wants to get the reference_hour
+      # from the metadata
+      if(!is.null(reference_hour)) {
+        if (is.na(reference_hour)) map_arg <- c(map_arg, reference_hour = "reference_hour")
+
+        # if it is not NA, use the reference_hour argument passed to load_ethoscope
+      } else if(!is.na(reference_hour)) {
+        arg_list <- c(arg_list, reference_hour = reference_hour)
+      }
+
       # create an additional list by parsing the elements in map_arg
       # and mapping them to the right column in row
       #
@@ -139,7 +148,6 @@ load_ethoscope <- function(   metadata,
 
       dups <- duplicated(names(arg_list))
       if(any(dups)) {
-
         duplicate_args <- names(arg_list)[dups]
         arg_list <- arg_list[!dups]
         for (d in duplicate_args) {
@@ -193,6 +201,8 @@ load_ethoscope <- function(   metadata,
   # if t is within the first 12 hours of each 24 hour cycle,
   # phase is L (Light)
   # otherwise phase is D (Dark)
+  message("Computing phase")
+  print("Computing phase")
   dt[, phase := ifelse(t %% hours(24) > hours(12), 'D', 'L')]
 
   return(dt)
