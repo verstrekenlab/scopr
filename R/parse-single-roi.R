@@ -102,6 +102,7 @@ parse_single_roi <- function(data,
 
 }
 
+
 #'
 parse_single_roi_wrapped <- function(id, region_id, path,
                                      min_time = 0,
@@ -176,83 +177,53 @@ parse_single_roi_wrapped <- function(id, region_id, path,
   # Annotation functions are available
   if(!is.null(FUN)){
 
-    # If FUN is a function then make it a list of a single function
-    # This way a program designed to work with a list of functions
-    # also works when there is only 1 and the user does not wrap it around list()
-    if(is.function(FUN)) {FUN <- list(FUN)}
-
-    i <- 1
-    for (FU in FUN) {
-
+    annotate <- function(func, i) {
       # fun_name <- as.character(substitute(FU))
       message(sprintf('Running annotation function #%d', i))
-
       # Run the annotation function on the data loaded from SQL
       # The return value is a behavr table with data for a single fly
       # The metadata in this table is a one row table
       # with a single column called
       # containing the id of the fly,
       # as taken from the id column in out
-      out_annotated <- FU(out, ...)
+      out_annotated <- func(out, ...)
 
       # Check if the annotation is empty
       is_empty <- is.null(out_annotated)
-      if(!is_empty)
-        is_empty <- nrow(out_annotated) == 0
+      if(!is_empty) is_empty <- nrow(out_annotated) == 0
 
       # If it is empty, emit a warning
       # set the corresponding entry to NULL
       # and go on to the next iteration
       # TODO NULL entries are ignored? How
-      if(is_empty){
-
+      if(is_empty) {
         warning(sprintf("No data in ROI %i after running FUN, from FILE %s. Skipping", region_id, path))
-        # return(NULL)
-        annotations[[i]] <- NULL
-
-      # If it is not empty, set the id and t columns as keys
-      # and store it in the right slot
+        return(NULL)
+        # If it is not empty, set the id and t columns as keys
+        # and store it in the right slot
       } else {
         setkey(out_annotated, 'id', 't')
-        annotations[[i]] <- out_annotated
         message(sprintf('Done with annotation function %d', i))
-
       }
-      i <- i + 1
+      return(out_annotated)
     }
+
+
+    # If FUN is a function then make it a list of a single function
+    # This way a program designed to work with a list of functions
+    # also works when there is only 1 and the user does not wrap it around list()
+    if(is.function(FUN)) {FUN <- list(FUN)}
+    annotations <- purrr::imap(FUN, ~annotate(.x, .y))
+
+  # if no annotation FUN is passed
   } else {
     annotations[[1]] <- out
   }
 
   metadata <- fslbehavr::meta(annotations[[1]])
-
-  if(length(annotations) == 1) {
-	  out <- annotations[[1]]
-  } else {
-    out <- Reduce(
-      function(x, y) {merge(x = x, y = y)},
-      list(
-        as.data.table(annotations[[1]]),
-        as.data.table(annotations[[2]]))
-      )
-
-    if(length(annotations) > 2) {
-      for(i in 3:length(annotations)) {
-        out <- Reduce(
-          function(x, y) {merge(x = x, y = y)},
-          list(
-            as.data.table(out),
-            as.data.table(annotations[[i]])
-          )
-        )
-      }
-    }
-  }
-
+  out <- Reduce(merge_annotations, annotations)
   setkey(out, 'id')
   fslbehavr::setmeta(out, metadata)
   # out <- out[!duplicated(out),]
   return(out)
-
-
 }

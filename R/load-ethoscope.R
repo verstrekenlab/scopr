@@ -119,13 +119,19 @@ load_ethoscope <- function(   metadata,
 
       # if reference_hour is NA, the user wants to get the reference_hour
       # from the metadata
+      message(reference_hour)
+      print(reference_hour)
+
       if(!is.null(reference_hour)) {
         if (is.na(reference_hour)) map_arg <- c(map_arg, reference_hour = "reference_hour")
 
         # if it is not NA, use the reference_hour argument passed to load_ethoscope
-      } else if(!is.na(reference_hour)) {
+      } else if (is.null(reference_hour)) {
+        arg_list <- c(arg_list, reference_hour = NULL)
+      }  else {
         arg_list <- c(arg_list, reference_hour = reference_hour)
       }
+
 
       # create an additional list by parsing the elements in map_arg
       # and mapping them to the right column in row
