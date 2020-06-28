@@ -3,18 +3,15 @@
 # this function is run on single individual data
 #' @importFrom rlang list2
 parse_single_roi <- function(data,
-                        min_time = 0,
-                        max_time = +Inf,
-                        reference_hour = NULL,
-                        verbose = TRUE,
-                        columns = NULL,
-                        cache=NULL,
-                        FUN = NULL,
-                        FUN_filter = NULL,
-                        progress = NULL,
-                        total_count = 0,
-                        rds_interface = FALSE,
-                        ...){
+                             min_time = 0,
+                             max_time = +Inf,
+                             reference_hour = NULL,
+                             verbose = TRUE,
+                             columns = NULL,
+                             cache=NULL,
+                             FUN = NULL,
+                             updateProgress = NULL,
+                             ...){
 
   roi_idx = NULL
   id <- data$id
@@ -35,19 +32,20 @@ parse_single_roi <- function(data,
   # if verbose, log some information to the user so he knows
   # a new fly is being loaded (progress tracking)
   if(verbose) {
-    info_message <- sprintf("Loading ROI number %i",region_id)
-    info_message_complete <- sprintf("%s from:\n\t%s\n", info_message, path)
-    cat(info_message_complete)
+    info_message <- sprintf("Loading ROI number %i from:\n\t%s\n", region_id, path)
+    message(info_message)
     # additionally, if a progress bar is available, update it as well
     # TODO The message is getting update but the value is not
-    if (requireNamespace("shiny", quietly = TRUE) & !is.null(progress)) {
-      progress$set(value = data$fly_count / total_count, detail = info_message_complete)
+    #if (requireNamespace("shiny", quietly = TRUE) & !is.null(progress)) {
+    if (is.function(updateProgress)) {
+      updateProgress(detail=info_message)
+      #progress$set(value = data$fly_count / total_count, detail = info_message_complete)
     }
   }
 
   # Check the path leads to a sqlite3 file
   if(tools::file_ext(path) != "db")
-    stop(sprintf("Unsuported file extention in %s",path))
+    stop(sprintf("Unsuported file extention in %s", path))
 
 
   # Compute the filesize of the sqlite3 file
@@ -86,10 +84,6 @@ parse_single_roi <- function(data,
 
     file_size = fs,
     FUN,
-    # Antonio additions
-    # FIXME Maybe they should be removed?
-    # FUN_filter,
-    rds_interface = rds_interface,
     ...
   )
 
@@ -111,30 +105,28 @@ parse_single_roi_wrapped <- function(id, region_id, path,
                                      columns = NULL,
                                      file_size = 0,
                                      FUN = NULL,
-                                     # FUN_filter = NULL,
-                                     rds_interface = FALSE,
                                      ...
-                                     ){
+){
 
 
 
   ## Read data for a single ROI (fly) from the SQLite file
   ## ----
   time_stamp = NULL
+  message(sprintf("I am calling read single roi with region id %d", region_id))
 
-  message("running read_single_roi")
   out <- read_single_roi(path,
                          region_id = region_id,
                          min_time = min_time,
                          max_time = max_time,
                          reference_hour = reference_hour,
                          columns = columns,
-                         time_stamp = time_stamp,
-                         rds_interface = rds_interface
-                         )
+                         time_stamp = time_stamp
+  )
+
 
   if(is.null(out) || nrow(out) == 0){
-    warning(sprintf("No data in ROI %i, from FILE %s. Skipping",region_id, path))
+    warning(sprintf("No data in ROI %i, from FILE %s. Skipping", region_id, path))
     return(NULL)
   }
 
@@ -153,77 +145,18 @@ parse_single_roi_wrapped <- function(id, region_id, path,
   out[,id := id]
 
   # Make id the first column
-  data.table::setcolorder(out,c("id", old_cols))
+  data.table::setcolorder(out, c("id", old_cols))
   # Make id as key of the data table
   data.table::setkeyv(out, "id")
 
   # Create a behavr table with a metadata table
   # that contains just the id and where id is the key
   # TODO This is so
-  met <- data.table::data.table(id = id, key="id")
+
+  met <- data.table::data.table(id = id, key = "id")
   fslbehavr::setbehavr(out, met)
   # ----
 
-  # TODO Remove this
-  # if(!is.null(FUN_filter))
-  #   out <- FUN_filter(out, ...)
-
-  ## Annotate
-  ## ----
-  # Declare a list to store the annotations
-  # produced by each passed FUN
-  annotations <- list()
-
-  # Annotation functions are available
-  if(!is.null(FUN)){
-
-    annotate <- function(func, i) {
-      # fun_name <- as.character(substitute(FU))
-      message(sprintf('Running annotation function #%d', i))
-      # Run the annotation function on the data loaded from SQL
-      # The return value is a behavr table with data for a single fly
-      # The metadata in this table is a one row table
-      # with a single column called
-      # containing the id of the fly,
-      # as taken from the id column in out
-      out_annotated <- func(out, ...)
-
-      # Check if the annotation is empty
-      is_empty <- is.null(out_annotated)
-      if(!is_empty) is_empty <- nrow(out_annotated) == 0
-
-      # If it is empty, emit a warning
-      # set the corresponding entry to NULL
-      # and go on to the next iteration
-      # TODO NULL entries are ignored? How
-      if(is_empty) {
-        warning(sprintf("No data in ROI %i after running FUN, from FILE %s. Skipping", region_id, path))
-        return(NULL)
-        # If it is not empty, set the id and t columns as keys
-        # and store it in the right slot
-      } else {
-        setkey(out_annotated, 'id', 't')
-        message(sprintf('Done with annotation function %d', i))
-      }
-      return(out_annotated)
-    }
-
-
-    # If FUN is a function then make it a list of a single function
-    # This way a program designed to work with a list of functions
-    # also works when there is only 1 and the user does not wrap it around list()
-    if(is.function(FUN)) {FUN <- list(FUN)}
-    annotations <- purrr::imap(FUN, ~annotate(.x, .y))
-
-  # if no annotation FUN is passed
-  } else {
-    annotations[[1]] <- out
-  }
-
-  metadata <- fslbehavr::meta(annotations[[1]])
-  out <- Reduce(merge_annotations, annotations)
-  setkey(out, 'id')
-  fslbehavr::setmeta(out, metadata)
-  # out <- out[!duplicated(out),]
+  out <- annotate(out, FUN)
   return(out)
 }

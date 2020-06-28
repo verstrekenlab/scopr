@@ -1,32 +1,11 @@
-read_rds_file <- function(rds_path, min_time, max_time, selected_cols) {
-   result <- as.data.table(readRDS(rds_path))
-   column_names <- colnames(result)
-   if("t" %in% column_names) result$t <- as.integer(result$t)
-   if("x" %in% column_names) result$x <- as.integer(result$x)
-   if("y" %in% column_names) result$y <- as.integer(result$y)
-   if("w" %in% column_names) result$w <- as.integer(result$w)
-   if("h" %in% column_names) result$h <- as.integer(result$h)
-   if("phi" %in% column_names) result$phi <- as.integer(result$phi)
-   if("xy_dist_log10x1000" %in% column_names) result$xy_dist_log10x1000 <- as.numeric(result$xy_dist_log10x1000)
-   if("is_inferred" %in% column_names) result$is_inferred <- as.integer(result$is_inferred)
-   if("has_interacted" %in% column_names) result$has_interacted <- as.integer(result$has_interacted)
-   res <- result[t > min_time & t < max_time,]
-   if(selected_cols != '*') {
-     res <- res[, ..selected_cols]
-   }
-   return(res)
-}
-
-#' @importFrom glue glue
 read_single_roi <- function( FILE,
                              region_id,
                              min_time = 0,
                              max_time = +Inf,
                              reference_hour = NULL,
                              columns = NULL,
-                             time_stamp = NULL, # only used for memoisation
-                             rds_interface = FALSE
-                             ){
+                             time_stamp = NULL # only used for memoisation
+){
 
   roi_idx = var_name = rois_idx = id = w = h = functional_type = sql_type = is_inferred = has_interacted = NULL
 
@@ -34,6 +13,7 @@ read_single_roi <- function( FILE,
   ## ----
   # read the metadata table from the result file
   # into a named list
+
   experiment_info <- experiment_info(FILE)
 
   if(min_time >= max_time)
@@ -77,8 +57,8 @@ read_single_roi <- function( FILE,
     # If no columns are explicitly requested, fetch everything
     if(is.null(columns)){
       selected_cols <- "*"
-    # If they are, add is_inferred and t (time)
-    # and make the data SQL compatible
+      # If they are, add is_inferred and t (time)
+      # and make the data SQL compatible
     } else {
       # Always add is_inferred to the list of returned columns
       # regarded of whether it is requested
@@ -94,13 +74,29 @@ read_single_roi <- function( FILE,
       # Generate a string using the requested columns
       # + is_inferred + t by collapsing them with ,+space
       # that can be used to build a SQL query
-      selected_cols = paste(unique(c("t",columns)),collapse=", ")
+      selected_cols = paste(unique(c("t", columns)), collapse=", ")
 
       # TODO Document why we need to subset the var_map
       var_map <- var_map[columns]
       data.table::setkey(var_map, var_name)
     }
     ## ----
+
+    ## 2.6 Read ROI_MAP
+    ## ----
+    # Load the current ROI properties
+    # roi_idx roi_value   x   y   w  h
+    # x, and y are referenced to the top left corner i.e. Python OpenCV way
+    roi_map <- data.table::as.data.table(RSQLite::dbGetQuery(con, "SELECT * FROM ROI_MAP"))
+    roi_row <- roi_map[roi_idx == region_id]
+
+    if(nrow(roi_row) == 0 ){
+      warning(sprintf("ROI %i does not exist, skipping", region_id))
+      return(NULL)
+    }
+
+    ## ----
+
 
     ## 2.3 Build the part of the SQL query that will
     ## filter the data using min_time and max_time
@@ -121,39 +117,17 @@ read_single_roi <- function( FILE,
 
     ## 2.4 Load the behavioral data into R
     ## ----
-    # FIXME Shall I further develop rds_interface as an
-    # input source generated as the data is backed up to the node
-    # or shall I further develop the caching mechanism to make it take that role?
-    if (rds_interface) {
-      logging::loginfo('Using rds interface')
-      logging::loginfo(FILE)
-      dbfile <- basename(FILE)
-      # exp_folder <- dirname(FILE)
-      prefix <- stringr::str_match(string = dbfile, pattern = "(20\\d\\d-\\d\\d-\\d\\d_\\d\\d-\\d\\d-\\d\\d_\\w{32}).db")[,2]
-      rds_path <- file.path(dirname(FILE), glue::glue("{prefix}_ROI_{region_id}.rds"))
-      result <- tryCatch(
-        read_rds_file(rds_path, min_time, max_time, selected_cols),
-        error = function(e) {
-          # browser()
-          logging::logwarn(e)
-          rds_interface <<- F
-          # browser()
-          })
-
-    } else {
-
-      # TODO filter here is inferred
-      # SELECT
-      # the selected columns
-      # from the ROI table given by the region_id
-      # with the user provided time filters
-      sql_query <- sprintf("SELECT %s FROM ROI_%i WHERE t >= %e %s",
-                           selected_cols, region_id,
-                           min_time, max_time_condition )
+    # TODO filter here is inferred
+    # SELECT
+    # the selected columns
+    # from the ROI table given by the region_id
+    # with the user provided time filters
+    sql_query <- sprintf("SELECT %s FROM ROI_%i WHERE t >= %e %s",
+                         selected_cols, region_id,
+                         min_time, max_time_condition )
 
 
-      result <- RSQLite::dbGetQuery(con, sql_query)
-    }
+    result <- RSQLite::dbGetQuery(con, sql_query)
 
     ## ----
     # TODO here, use setDT!!
@@ -164,6 +138,19 @@ read_single_roi <- function( FILE,
     if("id" %in% colnames(roi_dt))
       roi_dt[, id := NULL]
     ## ----
+
+    # Use these properties and the knowledge in
+    # var_map to normalize distances
+    roi_width <- max(c(roi_row[, w], roi_row[, h]))
+    for(var_n in var_map$var_name){
+      if(var_map[var_n, functional_type] == "distance"){
+        roi_dt[, (var_n) := get(var_n) / roi_width]
+      }
+      if(var_map[var_n, sql_type] == "BOOLEAN"){
+        roi_dt[, (var_n) := as.logical(get(var_n))]
+      }
+    }
+
 
     ## ----
     ## 2.5 Adjust the t column by
@@ -182,8 +169,8 @@ read_single_roi <- function( FILE,
       # get a timestamp in hours since the beginning of the day
       # i.e %Y-%m-%d 10:30:12 becomes 10 + 0.5 + 1/300 hours
       hour_start <- as.numeric(format(p, "%H")) +
-                    as.numeric(format(p, "%M")) / 60 +
-                    as.numeric(format(p, "%S")) / 3600
+        as.numeric(format(p, "%M")) / 60 +
+        as.numeric(format(p, "%S")) / 3600
 
       # compute how many hours ahead of ZT0 was the experiment_start
       h_after_ref <- (hour_start - reference_hour) %% 24
@@ -192,7 +179,10 @@ read_single_roi <- function( FILE,
       # add that amount to the t column so it becomes aligned with ZT
       # t will reflect the time since ZT0 and NOT since the experiment start
       # convert to seconds
+      message("I am still alive")
       message(sprintf("Adding %d ms to t column of fly %s", ms_after_ref, id))
+      message("Am I still alive?")
+
       roi_dt[, t := (t + ms_after_ref) / 1e3 ]
     }
     else{
@@ -203,31 +193,6 @@ read_single_roi <- function( FILE,
     }
     ## ----
 
-    ## 2.6 Read ROI_MAP
-    ## ----
-    # Load the current ROI properties
-    # roi_idx roi_value   x   y   w  h
-    # x, and y are referenced to the top left corner i.e. Python OpenCV way
-    roi_map <- data.table::as.data.table(RSQLite::dbGetQuery(con, "SELECT * FROM ROI_MAP"))
-    roi_row <- roi_map[roi_idx == region_id]
-
-    if(nrow(roi_row) == 0 ){
-      warning(sprintf("ROI %i does not exist, skipping",region_id))
-      return(NULL)
-    }
-
-    # Use these properties and the knowledge in
-    # var_map to normalize distances
-    roi_width <- max(c(roi_row[, w], roi_row[, h]))
-    for(var_n in var_map$var_name){
-      if(var_map[var_n, functional_type] == "distance"){
-        roi_dt[, (var_n) := get(var_n) / roi_width]
-      }
-      if(var_map[var_n, sql_type] == "BOOLEAN"){
-        roi_dt[, (var_n) := as.logical(get(var_n))]
-      }
-    }
-    ## ----
 
     ## 2.7 Default filtering of data
     ## ----

@@ -15,8 +15,6 @@ load_ethoscope(
   ncores = 1,
   FUN = NULL,
   map_arg = NULL,
-  progress = NULL,
-  rds_interface = FALSE,
   ...
 )
 }
@@ -42,9 +40,11 @@ When \code{NULL} and if \code{FUN} is set, columns can be retrieved automaticall
 \item{FUN}{function (optional) to transform the data from each individual
 immediately after is has been loaded.}
 
-\item{map_arg}{a list to map \code{FUN} arguments to metavariables values. See details}
+\item{map_arg}{OPTIONAL a list to map \code{FUN} arguments to metavariables values. See details}
 
 \item{...}{extra arguments to be passed to \code{FUN}}
+
+\item{progress}{OPTIONAL A shiny::Progress instance that reports status to the UI}
 }
 \value{
 A \link{behavr} table.

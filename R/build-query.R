@@ -1,5 +1,4 @@
 #' @noRd
-#' @import data.table
 build_query <- function(result_dir,
                         query = NULL,
                         # use_cached = FALSE,

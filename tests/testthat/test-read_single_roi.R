@@ -6,7 +6,7 @@ test_that("read_single_roi fails when expected", {
 
   test_file <- paste(dir, "ethoscope_results/029/E_029/2016-01-25_21-14-55/2016-01-25_21-14-55_029.db",sep="/")
 
-  expect_warning(a <- fslscopr::read_single_roi(test_file,region_id = 90), "does not exist")
+  expect_warning(a <- fslscopr::read_single_roi(test_file, region_id = 90), "does not exist")
   expect_null(a)
   expect_error(fslscopr::read_single_roi(test_file,region_id = 1, min_time = 1000, max_time = 20), "min_time can only be lower than max_time")
 
