@@ -21,5 +21,6 @@ test_that("annotate can handle an annotation function", {
 
   expect_is(dt, class = c('behavr', 'data.table', 'data.frame'))
   expect_gt(nrow(fslscopr:::dt), nrow(dt))
+  expect_true("max_distance" %in% colnames(dt))
 
 })
