@@ -9,7 +9,78 @@
 #' @export
 validate_metadata <- function(metadata) {
 
-  # TODO Add ethoscope metadata validation
 
-  return(TRUE)
+  # make sure the required colums are available
+  required_columns <- c("machine_name", "date", "reference_hour")
+  invalid <- !(required_columns %in% colnames(metadata))
+
+  if (any(invalid)) {
+    stop(abort_bad_argument(
+      arg = "metadata",
+      must = sprintf("contain columns %s", paste(required_columns, collapse = " "))
+    ))
+  }
+
+  # make sure the reference hour is numeric
+  if (!is.numeric(metadata$reference_hour)) {
+    stop(abort_bad_argument("reference_hour", "be of class numeric", sprintf("not %s", class(metadata$reference_hour))))
+  }
+
+
+  # validate the date column
+  date <- metadata$date
+  date_valid <- purrr::map_chr(date, function(x) {tryCatch({
+    parse_date(x)
+  }, error = function(e) {NA})})
+
+
+  invalid <- (is.na(date_valid))
+
+  if (sum(invalid) != 0)  {
+    stop(
+      abort_bad_argument(
+        "date",
+        sprintf(
+          "follow format YYYY-MM-DD. Rows # %s dont follow it",
+          paste(which(invalid), collapse = ", # ")
+        )
+      )
+    )
+  }
+
+  # if time is available, validate it too
+  if ("time" %in% colnames(metadata)) {
+
+    time <- metadata$time
+
+    time_valid <- purrr::map_chr(time, function(x) {tryCatch({
+      parse_time(x)
+    }, error = function(e) {NA})})
+
+    invalid <- (is.na(time_valid))
+
+    if (sum(invalid) != 0)  {
+      stop(
+        abort_bad_argument(
+          "time",
+          sprintf(
+            "follow format HH:MM:SS. Rows # %s dont follow it",
+            paste(which(invalid), collapse = ", # ")
+          )
+        )
+      )
+    }
+  }
+
+  # check duplicates
+  if (any(duplicated(metadata))) {
+    warning(sprintf(
+      "Rows # %s of metadata are duplicated",
+      paste(which(duplicated(metadata)))
+    ))
+  }
+
+
+  invisible(TRUE)
 }
+

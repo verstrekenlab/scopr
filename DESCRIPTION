@@ -37,5 +37,5 @@ Encoding: UTF-8
 LazyData: true
 URL: https://gitlab.com/flysleeplab/fsl-retho/scopr
 BugReports: https://gitlab.com/flysleeplab/fsl-retho/scopr/issues
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.1.9000
 Roxygen: list(markdown = TRUE)

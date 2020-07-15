@@ -179,9 +179,7 @@ read_single_roi <- function( FILE,
       # add that amount to the t column so it becomes aligned with ZT
       # t will reflect the time since ZT0 and NOT since the experiment start
       # convert to seconds
-      message("I am still alive")
       message(sprintf("Adding %d ms to t column of fly %s", ms_after_ref, id))
-      message("Am I still alive?")
 
       roi_dt[, t := (t + ms_after_ref) / 1e3 ]
     }

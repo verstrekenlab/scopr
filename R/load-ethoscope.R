@@ -59,6 +59,7 @@
 #' * [list_result_files] -- to list available files
 #' @references
 #' * [behavr tutorial](https://rethomics.github.io/behavr.html) -- how to work with the obtained [behavr] table
+#' @importFrom purrr map
 #' @export
 load_ethoscope <- function(metadata,
                            min_time = 0,
@@ -191,11 +192,26 @@ load_ethoscope <- function(metadata,
 
   # TODO This call to bind_behavr_list coerces a list of length 1
   # so maybe just unlist or [[1]] would be enough
-  dt <- fslbehavr::bind_behavr_list(l_dt)
+  # keep columns available in all l_dts (in all flies)
+  # emit a warning if one coumn is available only in some
+  all_columns <- unlist(purrr::map(l_dt, colnames))
+  unique_columns <- unique(all_columns)
+
+  col_count <- table(all_columns)
+  columns_to_keep <- names(col_count)[col_count == length(l_dt)]
+  columns_to_drop <- names(col_count)[col_count < length(l_dt)]
+
+  l_dt2 <- purrr::map(l_dt, function(x) {
+    x[, columns_to_keep, drop = F, with = F]
+  })
+
+  dt <- fslbehavr::bind_behavr_list(l_dt2)
 
   # Get rid of temporary data containers not needed anymore
   # Force R to garbage collect, making memory available
   rm(l_dt)
+  rm(l_dt2)
+
   gc()
 
   # finally, annotate the phase based on T
@@ -203,6 +219,7 @@ load_ethoscope <- function(metadata,
   # phase is L (Light)
   # otherwise phase is D (Dark)
   message("Computing phase")
+
   dt[, phase := ifelse(t %% hours(24) > hours(12), 'D', 'L')]
 
   return(dt)

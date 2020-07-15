@@ -6,8 +6,8 @@ test_that("parse_single_roi works in normal conditions", {
   test_file <- paste(dir, "ethoscope_results/029/E_029/2016-01-25_21-14-55/2016-01-25_21-14-55_029.db",sep="/")
   data <- data.table::data.table(id="xxx", region_id=1, file_info=list(list(path=test_file)), key="id")
 
-  a <- fslscopr::parse_single_roi(data, verbose = F)
-  a <- fslscopr::parse_single_roi(data, FUN = function(d){fslbehavr::bin_apply_all(d, y = x)}, verbose = F)
+  a <- parse_single_roi(data, verbose = F)
+  a <- parse_single_roi(data, FUN = function(d){fslbehavr::bin_apply_all(d, y = x)}, verbose = F)
 
   expect_true(all(a[,id] == "xxx"))
   expect_s3_class(a, "behavr")

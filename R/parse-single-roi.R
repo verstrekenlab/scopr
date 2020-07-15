@@ -1,6 +1,7 @@
 # for memoisation
 # we obtain data from one ROI and optionaly preanalyse it, by applying FUN.
 # this function is run on single individual data
+#' @param data one row data.table corresponding to a row of the original (and then linked) metadata
 #' @importFrom rlang list2
 parse_single_roi <- function(data,
                              min_time = 0,
@@ -38,7 +39,7 @@ parse_single_roi <- function(data,
     # TODO The message is getting update but the value is not
     #if (requireNamespace("shiny", quietly = TRUE) & !is.null(progress)) {
     if (is.function(updateProgress)) {
-      updateProgress(detail=info_message)
+      updateProgress(detail = info_message)
       #progress$set(value = data$fly_count / total_count, detail = info_message_complete)
     }
   }
@@ -89,6 +90,7 @@ parse_single_roi <- function(data,
 
   # TODO Verify this
   # The return value is a data table i.e not a behavr table with a metadata
+  if ("id" %in% colnames(out)) data.table::setkey(out, id)
   if(!is.null(out))
     fslbehavr::setbehavr(out, data)
 
@@ -156,7 +158,6 @@ parse_single_roi_wrapped <- function(id, region_id, path,
   met <- data.table::data.table(id = id, key = "id")
   fslbehavr::setbehavr(out, met)
   # ----
-
-  out <- annotate(out, FUN)
-  return(out)
+  annot <- annotate(out, FUN, ...)
+  return(annot)
 }

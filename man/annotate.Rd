@@ -4,7 +4,14 @@
 \alias{annotate}
 \title{Automatically annotate a raw single animal behavioral dataset}
 \usage{
-annotate(out, FUN = NULL, updateProgress = NULL)
+annotate(
+  out,
+  FUN = NULL,
+  updateProgress = NULL,
+  region_id = NULL,
+  path = NULL,
+  ...
+)
 }
 \arguments{
 \item{out}{A raw i.e. one row per frame behavr table}
@@ -20,10 +27,12 @@ A behavr table with all summary statistics in different columns
 }
 \description{
 Given a raw behavr table and a list of annotating functions
-return a list of behavr tables with one resulting table per input function
+return a list of tables with one resulting table per input function
 }
 \details{
 All functions should summarise using the same windows
 out should contain a single id. If you need to analyze data for several flies
 call \code{annotate} like this: \code{data[, annotate(.SD, FUN, progress), by = "id"]}
+or call \code{fslscopr::annotate_all}. This is needed because annotate
+is NOT id-aware. As such, the result is NOT a behavr table!
 }

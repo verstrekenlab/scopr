@@ -1,6 +1,25 @@
 context("link_ethoscope_metadata_remote")
 
+test_resource <- function(resource) {
+  options(timeout = 1, warn = -1)
+
+  status <- tryCatch({
+    destfile <- tempfile()
+    download.file(resource, destfile, quiet = T)
+    TRUE
+    }, error = function(e) {
+      FALSE
+    }
+  )
+  return(status)
+}
+
+
 test_that("link_ethoscope_metadata_remote with date and machine name", {
+  status <- test_resource("https://raw.githubusercontent.com/rethomics/scopr/master/inst/extdata/ethoscope_results/index.txt")
+  if(!status) testthat::skip("Resource unavailable")
+
+
   remote_dir <-"https://raw.githubusercontent.com/rethomics/scopr/master/inst/extdata/ethoscope_results"
   dir <- paste0(scopr_example_dir(), "/ethoscope_results/")
   query <- data.frame(machine_name = c("E_014", "E_014","E_029"),
@@ -16,7 +35,7 @@ test_that("link_ethoscope_metadata_remote with date and machine name", {
                                      result_dir = result_dir,
                                      overwrite_local = TRUE,
                                      verbose=F)
-?data.table::fread
+
   out2 <- fslscopr::link_ethoscope_metadata(query,
                               dir)
 
@@ -31,6 +50,10 @@ test_that("link_ethoscope_metadata_remote with date and machine name", {
 
 
 test_that("parse_query with date, machine name, and ROIs", {
+
+  status <- test_resource("https://raw.githubusercontent.com/rethomics/scopr/master/inst/extdata/ethoscope_results/index.txt")
+  if(!status) testthat::skip("Resource unavailable")
+
   remote_dir <-"https://raw.githubusercontent.com/rethomics/scopr/master/inst/extdata/ethoscope_results"
   dir <- paste0(scopr_example_dir(), "/ethoscope_results/")
   query <- data.frame(machine_name = c("E_014", "E_014","E_029"),
