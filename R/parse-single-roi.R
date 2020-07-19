@@ -14,7 +14,7 @@ parse_single_roi <- function(data,
                              updateProgress = NULL,
                              ...){
 
-  roi_idx = NULL
+  roi_idx <- NULL
   id <- data$id
   region_id <- data$region_id
   path <- data$file_info[[1]]$path
@@ -22,9 +22,9 @@ parse_single_roi <- function(data,
   # save the name of the columns the FUN annotation
   # method needs by running its needed_columns
   # attribute if it is defined
-  if(is.null(columns) & !is.null(FUN)){
+  if (is.null(columns) & !is.null(FUN)) {
     needed_columns <- attr(FUN, "needed_columns")
-    if(!is.null(needed_columns))
+    if (!is.null(needed_columns))
       columns <- needed_columns(...)
   }
 
@@ -32,20 +32,21 @@ parse_single_roi <- function(data,
 
   # if verbose, log some information to the user so he knows
   # a new fly is being loaded (progress tracking)
-  if(verbose) {
+  if (verbose) {
     info_message <- sprintf("Loading ROI number %i from:\n\t%s\n", region_id, path)
     message(info_message)
     # additionally, if a progress bar is available, update it as well
     # TODO The message is getting update but the value is not
     #if (requireNamespace("shiny", quietly = TRUE) & !is.null(progress)) {
+    updateProgress(detail = info_message)
+
     if (is.function(updateProgress)) {
-      updateProgress(detail = info_message)
-      #progress$set(value = data$fly_count / total_count, detail = info_message_complete)
+     updateProgress(detail = info_message)
     }
   }
 
   # Check the path leads to a sqlite3 file
-  if(tools::file_ext(path) != "db")
+  if (tools::file_ext(path) != "db")
     stop(sprintf("Unsuported file extention in %s", path))
 
 
@@ -55,10 +56,10 @@ parse_single_roi <- function(data,
 
   # If the cache defined, wrap the analysis in the memoise function
   # to cache the results for faster reloading
-  if(!is.null(cache)){
-    db <- memoise::cache_filesystem(cache, algo="md5")
+  if (!is.null(cache)) {
+    db <- memoise::cache_filesystem(cache, algo = "md5")
     parse_single_roi_wrapped_memo <- memoise::memoise(parse_single_roi_wrapped, cache = db)
-  } else{
+  } else {
     # otherwise the "cached" version is just the original function
     parse_single_roi_wrapped_memo <- parse_single_roi_wrapped
   }
@@ -91,7 +92,7 @@ parse_single_roi <- function(data,
   # TODO Verify this
   # The return value is a data table i.e not a behavr table with a metadata
   if ("id" %in% colnames(out)) data.table::setkey(out, id)
-  if(!is.null(out))
+  if (!is.null(out))
     fslbehavr::setbehavr(out, data)
 
   return(out)

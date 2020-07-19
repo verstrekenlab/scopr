@@ -117,8 +117,7 @@ load_ethoscope <- function(metadata,
       # from the metadata
       message(sprintf('Reference hour is set to %s', reference_hour))
 
-
-      if(!is.null(reference_hour)) {
+      if (!is.null(reference_hour)) {
         if (is.na(reference_hour)) map_arg <- c(map_arg, reference_hour = "reference_hour")
 
         # if it is not NA, use the reference_hour argument passed to load_ethoscope
@@ -149,7 +148,7 @@ load_ethoscope <- function(metadata,
       arg_list <- c(arg_list, arg_val)
 
       dups <- duplicated(names(arg_list))
-      if(any(dups)) {
+      if (any(dups)) {
         duplicate_args <- names(arg_list)[dups]
         arg_list <- arg_list[!dups]
         for (d in duplicate_args) {
@@ -176,7 +175,7 @@ load_ethoscope <- function(metadata,
 
   # Call load_fun in parallel or unithreaded
   # depending on the value of ncores
-  if(ncores == 1){
+  if (ncores == 1) {
 
     l_dt <- lapply(1:length(q_l), function(i) load_fun(q_l[[i]]))
 
@@ -187,7 +186,7 @@ load_ethoscope <- function(metadata,
            Please install it.",
            call. = FALSE)
     }
-    l_dt <- parallel::mclapply(1:length(q_l), function(i) load_fun(q_l[[i]]), mc.cores=ncores)
+    l_dt <- parallel::mclapply(1:length(q_l), function(i) load_fun(q_l[[i]]), mc.cores = ncores)
   }
 
   # TODO This call to bind_behavr_list coerces a list of length 1
