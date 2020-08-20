@@ -31,7 +31,7 @@ validate_metadata <- function(metadata) {
   date <- metadata$date
   date_valid <- purrr::map_chr(date, function(x) {tryCatch({
     parse_date(x)
-  }, error = function(e) {NA})})
+  }, warning = function(e) {NA})})
 
 
   invalid <- (is.na(date_valid))
@@ -78,6 +78,23 @@ validate_metadata <- function(metadata) {
       "Rows # %s of metadata are duplicated",
       paste(which(duplicated(metadata)))
     ))
+  }
+
+  if (any(is.na(metadata))) {
+    column_ids <- unique(which(is.na(metadata), arr.ind = TRUE)[, 2])
+    row_ids <- unique(which(is.na(metadata), arr.ind = TRUE)[, 1])
+    na_columns <- colnames(metadata)[column_ids]
+
+    stop(
+      abort_bad_argument(
+        paste(na_columns, collapse = ", "),
+        sprintf(
+          "columns in rows %s in your metadata contain NA (not assigned) values.
+          This is not allowed by rethomics, please either remove this column or give a dummy value like NOTASSIGNED",
+          paste(row_ids, collapse = ", # ")
+        )
+      )
+    )
   }
 
 
