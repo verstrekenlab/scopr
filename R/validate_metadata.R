@@ -11,7 +11,7 @@ validate_metadata <- function(metadata) {
 
 
   # make sure the required colums are available
-  required_columns <- c("machine_name", "date", "reference_hour")
+  required_columns <- c("region_id", "machine_name", "date", "reference_hour")
   invalid <- !(required_columns %in% colnames(metadata))
 
   if (any(invalid)) {
