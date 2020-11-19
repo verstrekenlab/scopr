@@ -116,6 +116,9 @@ load_ethoscope <- function(metadata,
       # if reference_hour is NA, the user wants to get the reference_hour
       # from the metadata
       message(sprintf('Reference hour is set to %s', reference_hour))
+      message("NA means it will be parsed from the metadata file")
+      message("as opposed to NULL, which means it is set to the onset of the experiment")
+
 
       if (!is.null(reference_hour)) {
         if (is.na(reference_hour)) map_arg <- c(map_arg, reference_hour = "reference_hour")
