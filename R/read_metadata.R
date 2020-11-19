@@ -6,7 +6,7 @@
 read_metadata <- function(metadata_path) {
 
   metadata <- tryCatch(
-    data.table::fread(cmd = paste0("grep -v '#' ", metadata_path)),
+    data.table::fread(cmd = paste0("grep -v '^#' ", metadata_path)),
     error = function(e) {
       message(e)
       stop_bad_argument(what = "metadata_path", "cannot be read with fread(). Check it is not malformed. For instance, make sure all rows have same number of columns i.e. same number of commas")
