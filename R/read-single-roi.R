@@ -39,6 +39,13 @@ read_single_roi <- function( FILE,
     # i.e. distance (cannot be negative), angle (cannot be more than 2pi),
     # bool, interaction, relative_distance_1e6, ...
     var_map <- data.table::as.data.table(RSQLite::dbGetQuery(con, "SELECT * FROM VAR_MAP"))
+    if(nrow(var_map) < 8) {
+      warning("Expected number of rows in VAR_MAP is less than expected (8)")
+      warning("Is the table empty?")
+      warning("I will read the default VAR_MAP, which should be identical in 99% of cases")
+      var_map <- fread('/etc/var_map.csv')
+    }
+
     data.table::setkey(var_map, var_name)
     # NOTE the var_map is loaded so
     # 1. the program can cross
@@ -66,9 +73,11 @@ read_single_roi <- function( FILE,
         columns <- unique(c(columns, "is_inferred"))
 
       # Warn the user that some of the requested columns are not available
-      if(any(!columns %in% var_map$var_name))
+      if(any(!columns %in% var_map$var_name)) {
+        message(sprintf('Requested columns %s', paste0(columns, collapse = ', ')))
         stop(sprintf("Some of the requested columns are NOT available. Available columns are: %s",
                      paste(var_map$var_name, collapse = " ")))
+      }
 
       # TODO Why not adding t above with is_inferred?
       # Generate a string using the requested columns
