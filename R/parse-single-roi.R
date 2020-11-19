@@ -36,9 +36,7 @@ parse_single_roi <- function(data,
     info_message <- sprintf("Loading ROI number %i from:\n\t%s\n", region_id, path)
     message(info_message)
     # additionally, if a progress bar is available, update it as well
-    # TODO The message is getting update but the value is not
-    #if (requireNamespace("shiny", quietly = TRUE) & !is.null(progress)) {
-    updateProgress(detail = info_message)
+    # TODO The message is getting updated but the value is not
 
     if (is.function(updateProgress)) {
      updateProgress(detail = info_message)
