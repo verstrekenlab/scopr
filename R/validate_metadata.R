@@ -9,7 +9,6 @@
 #' @export
 validate_metadata <- function(metadata) {
 
-
   # make sure the required colums are available
   required_columns <- c("region_id", "machine_name", "date", "reference_hour")
   invalid <- !(required_columns %in% colnames(metadata))
@@ -48,7 +47,9 @@ validate_metadata <- function(metadata) {
     )
   }
 
-  # if time is available, validate it too
+   metadata$date <- as.character(metadata$date)
+
+   # if time is available, validate it too
   if ("time" %in% colnames(metadata)) {
 
     time <- metadata$time
