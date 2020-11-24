@@ -1,4 +1,4 @@
-read_single_roi <- function( FILE,
+read_single_roi <- function(FILE,
                              region_id,
                              min_time = 0,
                              max_time = +Inf,
@@ -16,14 +16,27 @@ read_single_roi <- function( FILE,
 
   experiment_info <- experiment_info(FILE)
 
-  if(min_time >= max_time)
+  if (min_time >= max_time)
     stop("min_time can only be lower than max_time!")
 
   ## ----
 
   ## 2 Connect to the sqlite3 file
   ## ----
-  con <- RSQLite::dbConnect(RSQLite::SQLite(), FILE, flags=RSQLite::SQLITE_RO)
+  database_locked_message <- "Couldn't set synchronous mode: database is locked\nUse `synchronous` = NULL to turn off this warning."
+  con <- tryCatch(
+     RSQLite::dbConnect(RSQLite::SQLite(), FILE, flags = RSQLite::SQLITE_RO),
+    warning = function(w) {
+      w$message == database_locked_message
+      locked_retry <- getOption("locked_retry")
+      if (!is.null(locked_retry)) {
+        cmd <- paste(FILE, region_id, min_time, max_time, reference_hour, columns, collapse = "\t")
+        write(x = cmd, file = locked_retry, append = TRUE)
+      }
+      NULL
+    }
+  )
+  if (is.null(con)) {return(NULL)}
   tryCatch({
 
     ## 2.1 Read VAR_MAP
