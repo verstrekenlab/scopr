@@ -21,6 +21,8 @@ Imports:
   stringr,
   RSQLite,
   memoise,
+  feather,
+  logging,
   zoo
 Suggests: 
     testthat,
