@@ -54,6 +54,7 @@ link_ethoscope_metadata <- function(x, result_dir=NULL, result_comp = NULL, inde
   # result_dir = NULL, index_file = NULL
   pay = experiment_id = n = .N = region_id = id = . = path = dst_path = key = NULL
   query <- x
+
   # if query is a readable csv file, we parse it
   if(is.character(query) & length(query) == 1)
     tryCatch( {q <- read.csv(query)

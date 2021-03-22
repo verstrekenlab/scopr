@@ -6,8 +6,8 @@
 
 parse_date <- function(x, format="", tz="UTC"){
 
-  if(is.factor(x))
-    x <-  as.character(x)
+  # if(is.factor(x))
+  x <-  as.character(x)
 
   if(any(c("POSIXct","numeric") %in% class(x)))
     return(x)
@@ -28,8 +28,8 @@ parse_date <- function(x, format="", tz="UTC"){
 # }
 
 parse_time <- function(x, format="", tz="UTC"){
-  if(is.factor(x))
-    x <-  as.character(x)
+  # if(is.factor(x))
+  x <-  as.character(x)
   if("difftime" %in% class(x))
     return(x)
   if(is.character(x)){

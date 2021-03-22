@@ -1,135 +1,169 @@
-read_rds_file <- function(rds_path, min_time, max_time, selected_cols) {
-  result <- as.data.table(readRDS(rds_path))
-  column_names <- colnames(result)
-  if("t" %in% column_names) result$t <- as.integer(result$t)
-  if("x" %in% column_names) result$x <- as.integer(result$x)
-  if("y" %in% column_names) result$y <- as.integer(result$y)
-  if("w" %in% column_names) result$w <- as.integer(result$w)
-  if("h" %in% column_names) result$h <- as.integer(result$h)
-  if("phi" %in% column_names) result$phi <- as.integer(result$phi)
-  if("xy_dist_log10x1000" %in% column_names) result$xy_dist_log10x1000 <- as.numeric(result$xy_dist_log10x1000)
-  if("is_inferred" %in% column_names) result$is_inferred <- as.integer(result$is_inferred)
-  if("has_interacted" %in% column_names) result$has_interacted <- as.integer(result$has_interacted)
-  res <- result[t > min_time & t < max_time,]
-  if(selected_cols != '*') {
-    res <- res[, ..selected_cols]
-  }
-  return(res)
-}
-
-#' @importFrom glue glue
-#' @importFrom feather read_feather
-read_single_roi <- function( FILE,
+read_single_roi <- function(FILE,
                              region_id,
                              min_time = 0,
                              max_time = +Inf,
                              reference_hour = NULL,
                              columns = NULL,
-                             time_stamp=NULL, # only used for memoisation
-                             feather_interface = FALSE,
-                             rds_interface = FALSE
-                             ){
+                             time_stamp = NULL # only used for memoisation
+){
 
   roi_idx = var_name = rois_idx = id = w = h = functional_type = sql_type = is_inferred = has_interacted = NULL
+
+  ## 1 Read experiment metadata
+  ## ----
+  # read the metadata table from the result file
+  # into a named list
+
   experiment_info <- experiment_info(FILE)
 
-  # stringr::str_match(string = basename(feather_path), pattern = "(20\\d\\d-\\d\\d-\\d\\d_\\d\\d-\\d\\d-\\d\\d_\\w{32})_ROI_(\\d{1,2}).feather")
-
-  if(min_time >= max_time)
+  if (min_time >= max_time)
     stop("min_time can only be lower than max_time!")
 
-  con <- RSQLite::dbConnect(RSQLite::SQLite(), FILE, flags=RSQLite::SQLITE_RO)
+  ## ----
 
+  ## 2 Connect to the sqlite3 file
+  ## ----
+  database_locked_message <- "Couldn't set synchronous mode: database is locked\nUse `synchronous` = NULL to turn off this warning."
+  con <- tryCatch(
+     RSQLite::dbConnect(RSQLite::SQLite(), FILE, flags = RSQLite::SQLITE_RO),
+    warning = function(w) {
+      w$message == database_locked_message
+      locked_retry <- getOption("locked_retry")
+      if (!is.null(locked_retry)) {
+        cmd <- paste(FILE, region_id, min_time, max_time, reference_hour, columns, collapse = "\t")
+        write(x = cmd, file = locked_retry, append = TRUE)
+      }
+      NULL
+    }
+  )
+  if (is.null(con)) {return(NULL)}
   tryCatch({
+
+    ## 2.1 Read VAR_MAP
+    ## ----
+    #
+    # Load the var map into a data table
+    # We get a data.table with columns var_name sql_type functional_type
+    # * var_name: the name of the variable as it will appear
+    # in the data.table returned to the user
+    # * sql_type: the SQL data type (INT, SMALLINT, BOOLEAN, ...)
+    # * funcional_type: a one word description of the type of variable
+    # that gives information about its constraints
+    # i.e. distance (cannot be negative), angle (cannot be more than 2pi),
+    # bool, interaction, relative_distance_1e6, ...
     var_map <- data.table::as.data.table(RSQLite::dbGetQuery(con, "SELECT * FROM VAR_MAP"))
+    if(nrow(var_map) < 8) {
+      warning("Expected number of rows in VAR_MAP is less than expected (8)")
+      warning("Is the table empty?")
+      warning("I will read the default VAR_MAP, which should be identical in 99% of cases")
+      var_map <- fread('/etc/var_map.csv')
+    }
+
     data.table::setkey(var_map, var_name)
+    # NOTE the var_map is loaded so
+    # 1. the program can cross
+    #    the columns requested by the user
+    #    with the columns available in the data
+    #    and act accordingly
+    # 2. to learn the functional type of the columns
+    #    and this way know how to present the data to the user
+    #    i.e. normalize distances to the roi_width,
+    #    make boolean characters actual R booleans, etc
+    ## ----
+
+    ## 2.2 Build the part of the SQL query that will
+    ## fetch the requested columns
+    ## ----
+    # If no columns are explicitly requested, fetch everything
+    if(is.null(columns)){
+      selected_cols <- "*"
+      # If they are, add is_inferred and t (time)
+      # and make the data SQL compatible
+    } else {
+      # Always add is_inferred to the list of returned columns
+      # regarded of whether it is requested
+      if("is_inferred" %in% var_map$var_name)
+        columns <- unique(c(columns, "is_inferred"))
+
+      # Warn the user that some of the requested columns are not available
+      if(any(!columns %in% var_map$var_name)) {
+        message(sprintf('Requested columns %s', paste0(columns, collapse = ', ')))
+        stop(sprintf("Some of the requested columns are NOT available. Available columns are: %s",
+                     paste(var_map$var_name, collapse = " ")))
+      }
+
+      # TODO Why not adding t above with is_inferred?
+      # Generate a string using the requested columns
+      # + is_inferred + t by collapsing them with ,+space
+      # that can be used to build a SQL query
+      selected_cols = paste(unique(c("t", columns)), collapse=", ")
+
+      # TODO Document why we need to subset the var_map
+      var_map <- var_map[columns]
+      data.table::setkey(var_map, var_name)
+    }
+    ## ----
+
+    ## 2.6 Read ROI_MAP
+    ## ----
+    # Load the current ROI properties
+    # roi_idx roi_value   x   y   w  h
+    # x, and y are referenced to the top left corner i.e. Python OpenCV way
     roi_map <- data.table::as.data.table(RSQLite::dbGetQuery(con, "SELECT * FROM ROI_MAP"))
     roi_row <- roi_map[roi_idx == region_id]
 
     if(nrow(roi_row) == 0 ){
-      warning(sprintf("ROI %i does not exist, skipping",region_id))
+      warning(sprintf("ROI %i does not exist, skipping", region_id))
       return(NULL)
     }
+
+    ## ----
+
+
+    ## 2.3 Build the part of the SQL query that will
+    ## filter the data using min_time and max_time
+    ## ----
+    # Prepare the time filter given
+    # the user provided min_time and max_time
     if(max_time == Inf)
+      # No filter
       max_time_condition <- ""
     else
+      # t needs to be less than max_time in ms
       max_time_condition <-  sprintf("AND t < %e", max_time * 1000)
 
+    # we always filter for the min_time and if it's 0
+    # that's equivalent to no filtering
     min_time <- min_time * 1000
-    if(is.null(columns)){
-      selected_cols = "*"
-    }
-    else{
-      if("is_inferred" %in% var_map$var_name)
-        columns <- unique(c(columns, "is_inferred"))
+    ## ----
 
-      if(any(!columns %in% var_map$var_name))
-        stop(sprintf("Some of the requested columns are NOT available. Available columns are: %s",
-                     paste(var_map$var_name, collapse = " ")))
-      selected_cols = paste(unique(c("t",columns)),collapse=", ")
-      var_map <- var_map[columns]
-      data.table::setkey(var_map, var_name)
-    }
+    ## 2.4 Load the behavioral data into R
+    ## ----
+    # TODO filter here is inferred
+    # SELECT
+    # the selected columns
+    # from the ROI table given by the region_id
+    # with the user provided time filters
+    sql_query <- sprintf("SELECT %s FROM ROI_%i WHERE t >= %e %s",
+                         selected_cols, region_id,
+                         min_time, max_time_condition )
 
 
-    if(feather_interface) {
-      logging::loginfo('Using feather interface')
-      dbfile <- basename(FILE)
-      exp_folder <- dirname(FILE)
-      prefix <- stringr::str_match(string = dbfile, pattern = "(20\\d\\d-\\d\\d-\\d\\d_\\d\\d-\\d\\d-\\d\\d_\\w{32}).db")[,2]
-      feather_path <- file.path(dirname(FILE), glue::glue("{prefix}_ROI_{region_id}.feather"))
-      if(selected_cols == '*') {
-        result <- feather::read_feather(feather_path)[t > min_time & t < max_time,]
-      } else {
-        result <- feather::read_feather(feather_path)[t > min_time & t < max_time, ..selected_cols]
-      }
-    } else if (rds_interface) {
-      logging::loginfo('Using rds interface')
-      logging::loginfo(FILE)
-      dbfile <- basename(FILE)
-      # exp_folder <- dirname(FILE)
-      prefix <- stringr::str_match(string = dbfile, pattern = "(20\\d\\d-\\d\\d-\\d\\d_\\d\\d-\\d\\d-\\d\\d_\\w{32}).db")[,2]
-      rds_path <- file.path(dirname(FILE), glue::glue("{prefix}_ROI_{region_id}.rds"))
-      result <- tryCatch(
-        read_rds_file(rds_path, min_time, max_time, selected_cols),
-        error = function(e) {
-          # browser()
-          logging::logwarn(e)
-          rds_interface <<- F
-          # browser()
-          })
-    }
+    result <- RSQLite::dbGetQuery(con, sql_query)
 
-    if (!feather_interface & !rds_interface) {
-      # todo filter here is inferred
-      sql_query <- sprintf("SELECT %s FROM ROI_%i WHERE t >= %e %s",
-                           selected_cols, region_id,
-                           min_time, max_time_condition )
+    ## ----
+    # TODO here, use setDT!!
+    # FIXME however, bottleneck is sqlite 10times slower than reading equivalent csv!!!!
+    roi_dt <- data.table::setDT(result)
 
-      result <- RSQLite::dbGetQuery(con, sql_query)
-    }
-    # todo here, use setDT!!
-    # however, bottlenexk is sqlite 10times slower than reading equivalent csv!!!!
-    roi_dt <- data.table::as.data.table(result)
+    # remove the id column if it is available
     if("id" %in% colnames(roi_dt))
       roi_dt[, id := NULL]
+    ## ----
 
-    if(!is.null(reference_hour)){
-      p <- experiment_info$date_time
-      hour_start <- as.numeric(format(p, "%H")) +
-                    as.numeric(format(p, "%M")) / 60 +
-                    as.numeric(format(p, "%S")) / 3600
-      ms_after_ref <- ((hour_start - reference_hour) %% 24) * 3600 * 1000
-      # standardised time time_in_seconds
-      roi_dt[, t:= (t + ms_after_ref)/ 1e3 ]
-    }
-    else{
-      # just time_in_seconds
-      roi_dt[, t:= t/1e3]
-    }
-
-
-    roi_width <- max(c(roi_row[,w], roi_row[,h]))
+    # Use these properties and the knowledge in
+    # var_map to normalize distances
+    roi_width <- max(c(roi_row[, w], roi_row[, h]))
     for(var_n in var_map$var_name){
       if(var_map[var_n, functional_type] == "distance"){
         roi_dt[, (var_n) := get(var_n) / roi_width]
@@ -140,17 +174,66 @@ read_single_roi <- function( FILE,
     }
 
 
+    ## ----
+    ## 2.5 Adjust the t column by
+    ## * Aligning it to ZT0 if provided via the reference_hour argument
+    ## * Converting it to seconds
+
+    # 1. change the reference t0 from the start of the experiment
+    # to the user provided reference_hour if available
+    # the start of the experiment is recorded in experiment_info$date_time
+    # see experiment_info() for more information
+    # 2. convert from ms to s
+    if(!is.null(reference_hour)){
+      # get the start time recorded in the dbfile
+      # in a format() compatible format
+      p <- experiment_info$date_time
+      # get a timestamp in hours since the beginning of the day
+      # i.e %Y-%m-%d 10:30:12 becomes 10 + 0.5 + 1/300 hours
+      hour_start <- as.numeric(format(p, "%H")) +
+        as.numeric(format(p, "%M")) / 60 +
+        as.numeric(format(p, "%S")) / 3600
+
+      # compute how many hours ahead of ZT0 was the experiment_start
+      h_after_ref <- (hour_start - reference_hour) %% 24
+      # convert to ms
+      ms_after_ref <- h_after_ref * 3600 * 1000
+      # add that amount to the t column so it becomes aligned with ZT
+      # t will reflect the time since ZT0 and NOT since the experiment start
+      # convert to seconds
+      message(sprintf("Adding %d ms to t column of fly %s", ms_after_ref, id))
+
+      roi_dt[, t := (t + ms_after_ref) / 1e3 ]
+    }
+    else{
+      # if no reference_hour available, assume they are already aligned
+      # i.e. do nothing
+      # convert to seconds
+      roi_dt[, t := t / 1e3]
+    }
+    ## ----
+
+
+    ## 2.7 Default filtering of data
+    ## ----
+    # Keep rows where is_inferred is False or has_interacted is True
+    # NOTE is_inferred is True when a fly is not detected in a frame
+    # In that case, the last position where it was found is recorded instead
+    # The AdaptiveBGModel has this behavior for 30 seconds.
+    # Beyond that interval, no position is recorded i.e.
+    # it does not assume the fly is still there anymore
+    # In any case, we do not use them in the vanilla scopr workflow
     if(all(c("is_inferred", "has_interacted") %in% colnames(roi_dt))){
       # we keep infered cols if interaction happened!
-      roi_dt <- roi_dt[is_inferred==F | has_interacted == T]
+      roi_dt <- roi_dt[is_inferred == F | has_interacted == T]
     }
     else if("is_inferred" %in% colnames(roi_dt))
-      roi_dt <- roi_dt[is_inferred==F]
+      roi_dt <- roi_dt[is_inferred == F]
         roi_dt[, is_inferred := NULL]
+    ## End of tryCatch: return the data.table
     return(roi_dt)
   },
-  finally= {RSQLite::dbDisconnect(con)}
+  # Close the SQLite connection
+  finally = { RSQLite::dbDisconnect(con) }
   )
 }
-
-

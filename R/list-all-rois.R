@@ -18,7 +18,6 @@ list_all_rois <- function(FILE){
     })
     roi_map <- data.table::as.data.table(RSQLite::dbGetQuery(con, "SELECT * FROM ROI_MAP"))
   }, error = function(e) {
-    browser()
   }, finally = {
     RSQLite::dbDisconnect(con)
   }

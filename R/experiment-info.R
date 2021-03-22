@@ -11,14 +11,33 @@
 #' * [list_result_files] -- to list available files
 #' @export
 experiment_info <- function(FILE){
-  con <- RSQLite::dbConnect(RSQLite::SQLite(), FILE, flags=RSQLite::SQLITE_RO)
-  tryCatch(
-    {metadata <- RSQLite::dbGetQuery(con, "SELECT * FROM METADATA")},
-    finally={RSQLite::dbDisconnect(con)})
 
+  # Connect to the result file (`.db`)
+  con <- RSQLite::dbConnect(RSQLite::SQLite(), FILE, flags=RSQLite::SQLITE_RO)
+
+  # Try reading the METADATA table
+  tryCatch({
+    metadata <- RSQLite::dbGetQuery(con, "SELECT * FROM METADATA")
+
+  # Make sure we disconnect even if the above command is unsuccessful
+  # to keep the state of the database
+  }, finally = {
+    RSQLite::dbDisconnect(con)
+  })
+
+  # Generate a named list using the value column for the values
+  # and the field column for the names
   v <- as.list(metadata$value)
   names(v) <- metadata$field
-  #fixme explicitly GMT
-  v$date_time <- as.POSIXct(as.integer(v$date_time),origin="1970-01-01",tz = "GMT")
+
+  # Format the timestamp available in the date_time field
+  # to a nice readable string compatible with format() with format:
+  # %Y-%m-%d %H-%M-%S %Z
+  # use the same reference the timestamp has
+  # the timestamp was computed using either
+  # * the wall_clock with time.time() in Python 3 returning seconds since 1970-01-01 00:00:00 GMT
+  # * using the offset between the parsed start_time and the same reference in 1970 (FSLVirtualCamera)
+  # thus in either case, the timestamp has the same origin and it can be safely formatted back
+  v$date_time <- as.POSIXct(as.integer(v$date_time), origin = "1970-01-01", tz = "GMT")
   return(v)
 }

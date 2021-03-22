@@ -45,3 +45,48 @@ test_that("query ethoscopes works with multiple cores", {
     message("skipping test, ncores >1 not supported on windows")
   }
 })
+
+test_that("several annotations can be placed in the same call", {
+
+  dir <- paste0(scopr_example_dir(), "/ethoscope_results/")
+  query <- data.frame(machine_name = c("E_014", "E_014","E_029"),
+                      date = c("2016-01-25", "2016-02-17","2016-01-25"),
+                      time = c("21:46:14", NA, NA),
+                      test=c(1,2,3)
+  )
+  query <- link_ethoscope_metadata(query, dir)
+  foo <- function(d){fslbehavr::bin_apply_all(d,y = x)}
+  attr(foo, "needed_columns") <- function(){
+    "x"
+  }
+
+  bar <- function(d){fslbehavr::bin_apply_all(d, z = x)}
+  attr(foo, "needed_columns") <- function(){
+    "x"
+  }
+
+  dt <- load_ethoscope(query, verbose = F, FUN = list(foo, bar))
+})
+
+
+
+test_that("different coefficients can be passed through load_ethoscope", {
+
+  dir <- paste0(scopr_example_dir(), "/ethoscope_results/")
+  query <- data.frame(machine_name = c("E_014", "E_014","E_029"),
+                      date = c("2016-01-25", "2016-02-17","2016-01-25"),
+                      time = c("21:46:14", NA, NA),
+                      test=c(1,2,3)
+  )
+  query <- link_ethoscope_metadata(query, dir)
+
+  if (require("fslsleepr")) cnd <- rlang::catch_cnd({
+    load_ethoscope(
+      query, verbose = F,
+      FUN = fslsleepr::sleep_annotation,
+      velocity_correction_coef = 0.004
+    )
+  })
+
+})
+
