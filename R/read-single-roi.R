@@ -1,3 +1,13 @@
+#' Can I read the sqlite3 database, or is it locked
+#' @param FILE Path to sqlite3 database file
+database_is_available <- function(FILE) {
+  tryCatch({
+    con <- RSQLite::dbConnect(RSQLite::SQLite(), FILE, flags = RSQLite::SQLITE_RO)
+    data.table::as.data.table(RSQLite::dbGetQuery(con, "SELECT * FROM ROI_1"))
+    TRUE
+  }, error = function(e) FALSE)
+}
+
 read_single_roi <- function(FILE,
                              region_id,
                              min_time = 0,
