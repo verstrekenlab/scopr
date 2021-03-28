@@ -23,20 +23,8 @@ read_single_roi <- function(FILE,
 
   ## 2 Connect to the sqlite3 file
   ## ----
-  database_locked_message <- "Couldn't set synchronous mode: database is locked\nUse `synchronous` = NULL to turn off this warning."
-  con <- tryCatch(
-     RSQLite::dbConnect(RSQLite::SQLite(), FILE, flags = RSQLite::SQLITE_RO),
-    warning = function(w) {
-      w$message == database_locked_message
-      locked_retry <- getOption("locked_retry")
-      if (!is.null(locked_retry)) {
-        cmd <- paste(FILE, region_id, min_time, max_time, reference_hour, columns, collapse = "\t")
-        write(x = cmd, file = locked_retry, append = TRUE)
-      }
-      NULL
-    }
-  )
-  if (is.null(con)) {return(NULL)}
+  con <- RSQLite::dbConnect(RSQLite::SQLite(), FILE, flags = RSQLite::SQLITE_RO)
+
   tryCatch({
 
     ## 2.1 Read VAR_MAP
@@ -52,13 +40,6 @@ read_single_roi <- function(FILE,
     # i.e. distance (cannot be negative), angle (cannot be more than 2pi),
     # bool, interaction, relative_distance_1e6, ...
     var_map <- data.table::as.data.table(RSQLite::dbGetQuery(con, "SELECT * FROM VAR_MAP"))
-    if(nrow(var_map) < 8) {
-      warning("Expected number of rows in VAR_MAP is less than expected (8)")
-      warning("Is the table empty?")
-      warning("I will read the default VAR_MAP, which should be identical in 99% of cases")
-      var_map <- fread('/etc/var_map.csv')
-    }
-
     data.table::setkey(var_map, var_name)
     # NOTE the var_map is loaded so
     # 1. the program can cross
