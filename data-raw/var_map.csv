@@ -1,0 +1,9 @@
+var_name,sql_type,functional_type
+x,SMALLINT,distance
+y,SMALLINT,distance
+w,SMALLINT,distance
+h,SMALLINT,distance
+phi,SMALLINT,angle
+xy_dist_log10x1000,SMALLINT,relative_distance_1e6
+is_inferred,BOOLEAN,bool
+has_interacted,SMALLINT,interaction
