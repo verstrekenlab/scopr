@@ -9,6 +9,8 @@ load_data(q_l, ncores = 1, ...)
 }
 \arguments{
 \item{ncores}{number of cores to use for optional parallel processing (experimental).}
+
+\item{...}{Extra arguments to be passed to load_row}
 }
 \value{
 behavr table
@@ -16,4 +18,7 @@ behavr table
 \description{
 Load and preanalyze all entries from one dbfile
 Several cores can be used (if ncores>1)
+}
+\seealso{
+load_row
 }

@@ -23,7 +23,9 @@ Imports:
   memoise,
   zoo,
   purrr,
-  rlang
+  rlang,
+  R6,
+  rjson
 Suggests: 
     testthat,
     covr,

@@ -1,4 +1,4 @@
-,machine_name,date,reference_hour,ethoscope,genotype,sex,incubator,motor
+region_id,machine_name_missing,date,reference_hour,ethoscope,genotype,sex,incubator,motor
 1,ETHOSCOPE_008,2020-09-02,6,ETHOSCOPE_008,R19G02-Gal4xUAS-dtrpA1(II),F,I2,NO
 2,ETHOSCOPE_008,2020-09-02,6,ETHOSCOPE_008,R19G02-Gal4xUAS-dtrpA1(II),F,I2,NO
 3,ETHOSCOPE_008,2020-09-02,6,ETHOSCOPE_008,R19G02-Gal4xUAS-dtrpA1(II),F,I2,NO

@@ -21,6 +21,8 @@ load_data_single_core <- function(q, ...){
 #' Load and preanalyze all entries from one dbfile
 #' Several cores can be used (if ncores>1)
 #' @param ncores number of cores to use for optional parallel processing (experimental).
+#' @param ... Extra arguments to be passed to load_row
+#' @seealso load_row
 #' @return behavr table
 load_data <- function(q_l, ncores=1, ...) {
   if (ncores == 1) {
@@ -131,7 +133,9 @@ load_row <- function(row,
 #' That is it loads multiple `.db` files into a single `R` [behavr::behavr] table.
 #'
 #' @param metadata [data.table::data.table] used to load data (see detail)
-#' @param ... extra arguments to be passed to `FUN`
+#' @param ... extra arguments to be passed to load_data
+#' @seealso load_data
+#' @seealso load_row
 #'
 #' @return A [behavr] table.
 #' In addition to the metadata, it contains the data, with the columns:
@@ -141,8 +145,6 @@ load_row <- function(row,
 #' Distance units (e.g. xy position, height/width) are expressed as a fraction of the width of the ROI they originate from.
 #' @details
 #' the linked metadata should be generated using [link_ethoscope_metadata].
-#' @inheritParams load_row
-#' @inheritParams load_data
 #' @examples
 #' dir <- paste0(scopr_example_dir(), "/ethoscope_results/")
 #' data(region_id_metadata)

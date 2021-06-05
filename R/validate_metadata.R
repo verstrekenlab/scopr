@@ -6,12 +6,20 @@
 #' It can contain any other column that is not used in the analysis
 #' It must NOT contain columns with NA values, as that will make scopr ignore the row
 #' date_time must follow the format %YYYY-%MM-%DD_%HH-%MM-%SS
+#' @importFrom purrr map_chr
 #' @export
 validate_metadata <- function(metadata) {
 
   # make sure the required colums are available
-  required_columns <- c("region_id", "machine_name", "date", "reference_hour")
+  required_columns <- c("machine_name", "date")
+  if(scoprConfiguration$new()$content$reference_hour_required)
+    required_columns <- c(
+      required_columns,
+      "reference_hour"
+    )
+
   invalid <- !(required_columns %in% colnames(metadata))
+
 
   if (any(invalid)) {
     stop(abort_bad_argument(
@@ -20,9 +28,15 @@ validate_metadata <- function(metadata) {
     ))
   }
 
-  # make sure the reference hour is numeric
-  if (!is.numeric(metadata$reference_hour)) {
-    stop(abort_bad_argument("reference_hour", "be of class numeric", sprintf("not %s", class(metadata$reference_hour))))
+  if (!"region_id" %in% colnames(metadata)) {
+    message("Passed metadata has no region_id. R will assume you want to load all data then")
+  }
+
+  if ("reference_hour" %in% colnames(metadata)) {
+    # make sure the reference hour is numeric
+    if (!is.numeric(metadata$reference_hour)) {
+      stop(abort_bad_argument("reference_hour", "be of class numeric", sprintf("not %s", class(metadata$reference_hour))))
+    }
   }
 
 

@@ -9,7 +9,7 @@ load_ethoscope(metadata, ...)
 \arguments{
 \item{metadata}{\link[data.table:data.table]{data.table::data.table} used to load data (see detail)}
 
-\item{...}{extra arguments to be passed to \code{FUN}}
+\item{...}{extra arguments to be passed to load_data}
 }
 \value{
 A \link{behavr} table.
@@ -57,6 +57,10 @@ dt
 }
 }
 \seealso{
+load_data
+
+load_row
+
 Take the mode of a distribution
 \itemize{
 \item \link[behavr:behavr]{behavr::behavr} -- to understand the output format
