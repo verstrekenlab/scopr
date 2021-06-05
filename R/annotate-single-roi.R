@@ -4,11 +4,11 @@
 #' @param FUN A function describing how to aggregate the data into
 #' non overlapping and consecutive time_windows of a fixed length, defined on their time_window_length arg.
 #' It must:
-#' \begin{itemize}
+#' \itemize{
 #' \item Generate at least one new column where each value is a summary statistic for the corresponding time window
-#' \end{itemize}
+#' }
 
-#' @param ... Additional arguments to FUN 
+#' @param ... Additional arguments to FUN
 annotate_one_func <- function(data, FUN, ...) {
 
   # Run the annotation function on the data loaded from SQL
@@ -16,7 +16,7 @@ annotate_one_func <- function(data, FUN, ...) {
   # The metadata in this table is a one row table
   # with a single column called
   # containing the id of the fly,
-  # as taken from the id column in data 
+  # as taken from the id column in data
   data_annotated <- FUN(data, ...)
 
   # Check if the annotation is null or has 0 rows (in either case, considered empty)
@@ -69,7 +69,7 @@ annotate_single_roi <- function(data, FUN=NULL, ...) {
     # This way a program designed to work with a list of functions
     # also works when there is only 1 and the user does not wrap it around list()
     if (is.function(FUN)) {FUN <- list(FUN)}
-    annotations <- purrr::map(FUN, ~annotate_one_func(data=data, FUN=., ...))
+    annotations <- lapply(FUN, function(x) annotate_one_func(data=data, FUN=x, ...))
 
     # if no annotation FUN is passed
   } else {

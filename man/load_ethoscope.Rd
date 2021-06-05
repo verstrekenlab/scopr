@@ -4,41 +4,10 @@
 \alias{load_ethoscope}
 \title{Load data from ethoscope result files}
 \usage{
-load_ethoscope(
-  metadata,
-  min_time = 0,
-  max_time = Inf,
-  reference_hour = NULL,
-  verbose = TRUE,
-  columns = NULL,
-  cache = NULL,
-  ncores = 1,
-  FUN = NULL,
-  map_arg = NULL,
-  ...
-)
+load_ethoscope(metadata, ...)
 }
 \arguments{
 \item{metadata}{\link[data.table:data.table]{data.table::data.table} used to load data (see detail)}
-
-\item{min_time}{max_time load only data between \code{min_time} and \code{max_time} (in seconds).
-This time is \emph{relative to the start of the experiment}.}
-
-\item{reference_hour}{hour, in the day, to use as ZT0 reference.
-When unspecified, time will be relative to the start of the experiment.}
-
-\item{verbose}{whether to print progress (a logical)}
-
-\item{columns}{optional vector of columns to be selected from the db file.
-Time (t) is always implicitly selected.
-When \code{NULL} and if \code{FUN} is set, columns can be retrieved automatically (from the attributes of \code{FUN}).}
-
-\item{cache}{the name of a local directory to cache results for faster subsequent data loading.}
-
-\item{FUN}{function (optional) to transform the data from each individual
-immediately after is has been loaded.}
-
-\item{map_arg}{OPTIONAL a list to map \code{FUN} arguments to metavariables values. See details}
 
 \item{...}{extra arguments to be passed to \code{FUN}}
 }
@@ -59,8 +28,6 @@ That is it loads multiple \code{.db} files into a single \code{R} \link[behavr:b
 }
 \details{
 the linked metadata should be generated using \link{link_ethoscope_metadata}.
-\code{map_arg} is a list of the form \code{list(fun_arg = "metavariable")}.
-When provided, \code{FUN} will set specific arguments (\code{fun_arg}) to the value of a (quoted) metavariable.
 }
 \examples{
 dir <- paste0(scopr_example_dir(), "/ethoscope_results/")

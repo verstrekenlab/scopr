@@ -14,9 +14,9 @@ parse_single_roi_wrapped(
   columns = NULL,
   file_size = 0,
   verbose = FALSE,
-  updateProgress_load,
-  updateProgress_annotate,
   FUN = NULL,
+  updateProgress_load = NULL,
+  updateProgress_annotate = NULL,
   ...
 )
 }

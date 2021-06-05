@@ -1,4 +1,4 @@
-keep_valid_db_files <- function(db_files) {
+keep_valid_db_files <- function(db_files, result_dir) {
     fields <- strsplit(db_files,"/")
     # keep files stored following the expected structure
     # all files should be under a 3 folder structure:
@@ -6,18 +6,18 @@ keep_valid_db_files <- function(db_files) {
     # which gives 4 fieds
     valid_files <- sapply(fields,length) == 4
     db_files <- db_files[valid_files]
-  
+
     invalids = fields[!valid_files]
     if(length(invalids) > 0){
       warning("There are some invalid files:")
-  
+
       for(i in 1:length(invalids)){
         warning(paste(invalids[[i]]),sep='/')
       }
     }
-  
+
     if(length(db_files) == 0){
-      stop(sprintf("No .db files detected in the directory '%s'. Ensure it is not empty.",result_dir))
+      stop(sprintf("No .db files detected in the directory '%s'. Ensure it is not empty.", result_dir))
     }
     return(valid_files)
 }
@@ -69,13 +69,13 @@ list_result_files <- function(result_dir, index_file=NULL){
 
   else{
     # this is the call that yields all the dbfiles available in the database
-    all_db_files <- list.files(result_dir,recursive=T, pattern="*\\.db$")
+    all_db_files <- list.files(result_dir, recursive=T, pattern="*\\.db$")
   }
 
-    
+
   # keep only files that follow the right structure
-  valid_files <- keep_valid_db_files(all_db_files)
-  fields <- strsplit(db_files[valid_files], sep="/")
+  valid_files <- keep_valid_db_files(all_db_files, result_dir)
+  fields <- strsplit(all_db_files[valid_files], split="/")
 
   # build a meta dataset (files_info)
   files_info <- data.table::as.data.table(do.call("rbind",fields))

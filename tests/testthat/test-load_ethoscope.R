@@ -55,12 +55,12 @@ test_that("several annotations can be placed in the same call", {
                       test=c(1,2,3)
   )
   query <- link_ethoscope_metadata(query, dir)
-  foo <- function(d){fslbehavr::bin_apply_all(d,y = x)}
+  foo <- function(d){behavr::bin_apply_all(d,y = x)}
   attr(foo, "needed_columns") <- function(){
     "x"
   }
 
-  bar <- function(d){fslbehavr::bin_apply_all(d, z = x)}
+  bar <- function(d){behavr::bin_apply_all(d, z = x)}
   attr(foo, "needed_columns") <- function(){
     "x"
   }
@@ -80,10 +80,10 @@ test_that("different coefficients can be passed through load_ethoscope", {
   )
   query <- link_ethoscope_metadata(query, dir)
 
-  if (require("fslsleepr")) cnd <- rlang::catch_cnd({
+  if (require("sleepr")) cnd <- rlang::catch_cnd({
     load_ethoscope(
       query, verbose = F,
-      FUN = fslsleepr::sleep_annotation,
+      FUN = sleepr::sleep_annotation,
       velocity_correction_coef = 0.004
     )
   })

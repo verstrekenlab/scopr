@@ -6,12 +6,12 @@
 We obtain data from one ROI and optionaly preanalyse it, by applying FUN.
 This function is run on single individual data
 The actual work is done by parse_single_roi_wrapped. This function just does the following things before calling parse_single_roi_wrapped:
-\begin{itemize}
+\itemize{
 \item{Figure out which columns need to be queried from the SQLite file}
 \item{Report information messages if the user wants to}
 \item{Set up a memoised cache}
 \item{Confirm the passed input leads to a sqlite file (the file ends in db) and check its size. The size is used later on to check whether the cache is invalid or not}
-\end{itemize}
+}
 Very importantly, after calling parse_single_roi_wrapped, the passed metadata input is bound to the loaded data into a behavr table}
 \usage{
 parse_single_roi(
@@ -21,6 +21,7 @@ parse_single_roi(
   reference_hour = NULL,
   columns = NULL,
   cache = NULL,
+  verbose = FALSE,
   FUN = NULL,
   updateProgress_load = NULL,
   updateProgress_annotate = NULL,
@@ -41,11 +42,11 @@ a whole extra day is prepended to the data, because the time series always start
 
 \item{cache}{character, path to a folder in the filesystem where cache files should be saved or searched to speed up future reloads of the same data}
 
+\item{verbose}{boolean, if TRUE, all information messages are printed on the console. The loading process is silent otherwise}
+
 \item{FUN}{A function or list of functions}
 
 \item{...}{Additional arguments to FUN}
-
-\item{verbose}{boolean, if TRUE, all information messages are printed on the console. The loading process is silent otherwise}
 }
 \value{
 A behavr table containing the loaded and pre analyzed data
@@ -55,12 +56,12 @@ Load data from a SQLite database for one ROI and preanalyze it
 We obtain data from one ROI and optionaly preanalyse it, by applying FUN.
 This function is run on single individual data
 The actual work is done by parse_single_roi_wrapped. This function just does the following things before calling parse_single_roi_wrapped:
-\begin{itemize}
+\itemize{
 \item{Figure out which columns need to be queried from the SQLite file}
 \item{Report information messages if the user wants to}
 \item{Set up a memoised cache}
 \item{Confirm the passed input leads to a sqlite file (the file ends in db) and check its size. The size is used later on to check whether the cache is invalid or not}
-\end{itemize}
+}
 Very importantly, after calling parse_single_roi_wrapped, the passed metadata input is bound to the loaded data into a behavr table
 }
 \seealso{

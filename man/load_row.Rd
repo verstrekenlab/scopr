@@ -10,10 +10,12 @@ load_row(
   row,
   min_time = 0,
   max_time = Inf,
-  verbose = FALSE,
+  reference_hour = NULL,
+  verbose = TRUE,
+  columns = NULL,
   cache = NULL,
-  columns,
-  FUN,
+  FUN = NULL,
+  map_arg = NULL,
   ...
 )
 }
@@ -21,19 +23,30 @@ load_row(
 \item{min_time, }{max_time load only data between \code{min_time} and \code{max_time} (in seconds).
 This time is \emph{relative to the start of the experiment}.}
 
-\item{verbose}{whether to print progress (a logical)}
+\item{reference_hour}{hour, in the day, to use as ZT0 reference.
+When unspecified, time will be relative to the start of the experiment.}
 
-\item{cache}{the name of a local directory to cache results for faster subsequent data loading.}
+\item{verbose}{whether to print progress (a logical)}
 
 \item{columns}{optional vector of columns to be selected from the db file.
 Time (t) is always implicitly selected.
 When \code{NULL} and if \code{FUN} is set, columns can be retrieved automatically (from the attributes of \code{FUN}).}
 
-\item{reference_hour}{hour, in the day, to use as ZT0 reference.
-When unspecified, time will be relative to the start of the experiment.}
+\item{cache}{the name of a local directory to cache results for faster subsequent data loading.}
+
+\item{FUN}{function (optional) to transform the data from each individual
+immediately after is has been loaded.}
+
+\item{map_arg}{OPTIONAL a list to map \code{FUN} arguments to metavariables values. See details}
+
+\item{...}{extra arguments to be passed to \code{FUN}}
 }
 \description{
 Call parse_single_roi with sensible arguments
 Prepare a list of arguments to pass to parse_single_roi
 using arguments explicitly declared by the user or taken from the metadata
+}
+\details{
+\code{map_arg} is a list of the form \code{list(fun_arg = "metavariable")}.
+When provided, \code{FUN} will set specific arguments (\code{fun_arg}) to the value of a (quoted) metavariable.
 }

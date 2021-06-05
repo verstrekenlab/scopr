@@ -35,7 +35,7 @@ a whole extra day is prepended to the data, because the time series always start
 }
 \description{
 This function performs the following actions
-\begin{itemize}
+\itemize{
 \item{Verify the desired columns are available, by checking the VAR_MAP table, which describes the ROI_X tables.
 If the VAR_MAP is corrupted, a warning is emitted and a default VAR_MAP is loaded from scopr internal dataset
 }
@@ -46,5 +46,5 @@ If the VAR_MAP is corrupted, a warning is emitted and a default VAR_MAP is loade
 \item{If the start happened < 12 hours since ZT0 (i.e. in the L phase for a standard 12h LD experiment) the difference in between is added so t=0 becomes ZT0, and not the experiment start}
 \item{Moreover, the unit is switched from ms to s}
 \item{The data is filtered, so only data not inferred from previous positions is kept. Alternatively, if the has_interacted column is available and is 1, the data is also kept, even if inferred}
-\end{itemize}
+}
 }

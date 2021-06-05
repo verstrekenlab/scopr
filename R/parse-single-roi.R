@@ -3,12 +3,12 @@
 #' We obtain data from one ROI and optionaly preanalyse it, by applying FUN.
 #' This function is run on single individual data
 #' The actual work is done by parse_single_roi_wrapped. This function just does the following things before calling parse_single_roi_wrapped:
-#' \begin{itemize}
+#' \itemize{
 #' \item{Figure out which columns need to be queried from the SQLite file}
 #' \item{Report information messages if the user wants to}
 #' \item{Set up a memoised cache}
 #' \item{Confirm the passed input leads to a sqlite file (the file ends in db) and check its size. The size is used later on to check whether the cache is invalid or not}
-#' \end{itemize}
+#' }
 #' Very importantly, after calling parse_single_roi_wrapped, the passed metadata input is bound to the loaded data into a behavr table
 #' @param data one row data.table corresponding to a row of the original (and then linked) metadata
 #' @param verbose boolean, if TRUE, all information messages are printed on the console. The loading process is silent otherwise
@@ -26,6 +26,7 @@ parse_single_roi <- function(data,
                              reference_hour = NULL,
                              columns = NULL,
                              cache=NULL,
+                             verbose = FALSE,
                              FUN = NULL,
                              updateProgress_load = NULL,
                              updateProgress_annotate = NULL,
@@ -77,7 +78,10 @@ parse_single_roi <- function(data,
     reference_hour,
     columns,
     file_size = fs,
+    verbose=verbose,
     FUN,
+    updateProgress_load=updateProgress_load,
+    updateProgress_annotate=updateProgress_annotate,
     ...
   )
 
@@ -102,9 +106,9 @@ parse_single_roi_wrapped <- function(id, region_id, path,
                                      columns = NULL,
                                      file_size = 0,
                                      verbose = FALSE,
-                                     updateProgress_load,
-                                     updateProgress_annotate,
                                      FUN = NULL,
+                                     updateProgress_load = NULL,
+                                     updateProgress_annotate = NULL,
                                      ...
 ){
 
@@ -135,7 +139,7 @@ parse_single_roi_wrapped <- function(id, region_id, path,
 
   if (is.function(updateProgress_load)) {
      info_message <- sprintf("Loaded ROI number %i from:\n\t%s\n", region_id, path)
-     updateProgress_load(detail = info_message)
+   updateProgress_load(info_message)
   }
 
 

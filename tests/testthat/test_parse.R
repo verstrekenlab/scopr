@@ -1,7 +1,7 @@
 # library(data.table)
-# metadata <- fread("/1TB/Cloud/Lab/Gitlab/fslretho/inst/extdata/ethoscope_metadata/metadata_test.csv")
+# metadata <- fread("/1TB/Cloud/Lab/Gitlab/retho/inst/extdata/ethoscope_metadata/metadata_test.csv")
 #
-# metadata <- fslscopr::link_ethoscope_metadata(metadata, result_dir = "/ethoscope_data/results/")
+# metadata <- scopr::link_ethoscope_metadata(metadata, result_dir = "/ethoscope_data/results/")
 #
 # d <- out
 #
@@ -30,8 +30,8 @@
 #
 # dt <- load_ethoscope(metadata = metadata[1:2,], verbose = T, reference_hour = NULL, FUN = list(interaction_number))
 # dt <- load_ethoscope(metadata = metadata[1:2,], verbose = T, reference_hour = NULL, FUN = list(velocity_avg))
-# dt <- load_ethoscope(metadata = metadata[1:2,], verbose = T, reference_hour = NULL, FUN = list(fslsleepr::sleep_annotation))
+# dt <- load_ethoscope(metadata = metadata[1:2,], verbose = T, reference_hour = NULL, FUN = list(sleepr::sleep_annotation))
 # dt <- load_ethoscope(metadata = metadata[1:2,], verbose = T, reference_hour = NULL, FUN = list(
 #   movement_detector,
-#   fslsleepr::sleep_annotation
+#   sleepr::sleep_annotation
 #   ))

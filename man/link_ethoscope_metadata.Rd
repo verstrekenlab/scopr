@@ -33,8 +33,6 @@ link_ethoscope_metadata(
 
 \item{overwrite_local}{whether to download all files.
 The default, \code{FALSE}, is to only fetch files if they are newer on the remote.}
-
-\item{verbose}{whether to print progress (a logical)}
 }
 \value{
 a \link[data.table:data.table]{data.table::data.table} with the same rows as x, and extra columns for further data loading

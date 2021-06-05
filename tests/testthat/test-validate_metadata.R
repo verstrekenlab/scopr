@@ -12,15 +12,15 @@ test_that("validate_metadata validates valid metadata", {
   expect_true(validate_metadata(metadata))
 
   # with a time column
-  metadata <- data.table(region_id = 1:10, machine_name = "ETHOSCOPE_01", date = "2020-07-05", time = "23:10:54", reference_hour = 12)
+  metadata <- data.table(region_id = 1:10, machine_name = "ETHOSCOPE_001", date = "2020-07-05", time = "23:10:54", reference_hour = 12)
   expect_true(validate_metadata(metadata))
 
   # without region id
-  metadata <- data.table(machine_name = "ETHOSCOPE_01", date = "2020-07-05", time = "23:10:54", reference_hour = 12)
+  metadata <- data.table(machine_name = "ETHOSCOPE_001", date = "2020-07-05", time = "23:10:54", reference_hour = 12)
   expect_true(validate_metadata(metadata))
 
   # alternative formats that the parser can handle
-  metadata <- data.table(machine_name = "ETHOSCOPE_01", date = "2020/07/05", time = "8:00:00", reference_hour = 12)
+  metadata <- data.table(machine_name = "ETHOSCOPE_001", date = "2020/07/05", time = "8:00:00", reference_hour = 12)
   expect_true(validate_metadata(metadata))
 
 })

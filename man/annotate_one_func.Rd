@@ -12,9 +12,9 @@ annotate_one_func(data, FUN, ...)
 \item{FUN}{A function describing how to aggregate the data into
 non overlapping and consecutive time_windows of a fixed length, defined on their time_window_length arg.
 It must:
-\begin{itemize}
+\itemize{
 \item Generate at least one new column where each value is a summary statistic for the corresponding time window
-\end{itemize}}
+}}
 
 \item{...}{Additional arguments to FUN}
 }

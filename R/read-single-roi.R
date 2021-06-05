@@ -23,7 +23,7 @@ database_is_available <- function(FILE) {
 #' Read data from a single ROI in a SQLite file
 #'
 #' This function performs the following actions
-#' \begin{itemize}
+#' \itemize{
 #' \item{Verify the desired columns are available, by checking the VAR_MAP table, which describes the ROI_X tables.
 #'   If the VAR_MAP is corrupted, a warning is emitted and a default VAR_MAP is loaded from scopr internal dataset
 #' }
@@ -34,7 +34,7 @@ database_is_available <- function(FILE) {
 #' \item{If the start happened < 12 hours since ZT0 (i.e. in the L phase for a standard 12h LD experiment) the difference in between is added so t=0 becomes ZT0, and not the experiment start}
 #' \item{Moreover, the unit is switched from ms to s}
 #' \item{The data is filtered, so only data not inferred from previous positions is kept. Alternatively, if the has_interacted column is available and is 1, the data is also kept, even if inferred}
-#' \end{itemize}
+#' }
 #' @param FILE character, absolute path to a sqlite3 file (ending in .db typically)
 #' @param region_id numeric, position of the animal's roi in the ethoscope's layout. Should be 1-20 for the standard 20-animal arena
 #' @param min_time numeric, time in seconds from the start of the experiment after which the data is loaded into R
@@ -43,7 +43,7 @@ database_is_available <- function(FILE) {
 #' a whole extra day is prepended to the data, because the time series always starts with an L phase (even if this L phase is fully NA)
 #' @param columns Columns to be loaded from the dbfile. Checked against the VAR_MAP for availability
 #' @param time_stamp Used to memoise the function
-#' @return 
+#' @return
 read_single_roi <- function(FILE,
                              region_id,
                              min_time = 0,
