@@ -1,25 +1,19 @@
-#' Load a metadata .csv into R and perform basic validation
-#'
-#' @importFrom data.table fread
-#' @importFrom magrittr `%>%`
-#' @export
+#' Load an ethoscope metadata .csv into R
+#' 
+#' With this function you can pass a metadata file:
+#' * with comments (lines starting with #)
+#' * ZT0 OR reference_hour can be passed to state the time in GMT TZ when the lights turned on
+#' @importFrom data.table as.data.table 
+#' @return data.table with loaded metadata (not validated)
 read_metadata <- function(metadata_path) {
 
-  metadata <- tryCatch(
-    data.table::fread(cmd = paste0("grep -v '^#' ", metadata_path)),
-    error = function(e) {
-      message(e)
-      stop_bad_argument(what = "metadata_path", "cannot be read with fread(). Check it is not malformed. For instance, make sure all rows have same number of columns i.e. same number of commas")
-    })
+  metadata <- read.table(metadata_path, sep=",", comment.char="#", header=TRUE, row.names=F)
+  metadata <- data.table::as.data.table(metadata)
 
   # change the column zt0 to reference_hour if available
   if ((!"reference_hour" %in% colnames(metadata)) & ("ZT0" %in% colnames(metadata))) {
-    colnames(metadata) <- colnames(metadata) %>% gsub(
-      pattern = "ZT0",
-      x = colnames(metadata),
-      replacement =  "reference_hour"
-    )
+    metadata$reference_hour <- metadata$ZT0
+    metadata$ZT0 <- NULL
   }
-
   return(metadata)
 }
