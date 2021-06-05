@@ -2,10 +2,17 @@
 % Please edit documentation in R/read_metadata.R
 \name{read_metadata}
 \alias{read_metadata}
-\title{Load a metadata .csv into R and perform basic validation}
+\title{Load an ethoscope metadata .csv into R}
 \usage{
 read_metadata(metadata_path)
 }
+\value{
+data.table with loaded metadata (not validated)
+}
 \description{
-Load a metadata .csv into R and perform basic validation
+With this function you can pass a metadata file:
+\itemize{
+\item with comments (lines starting with #)
+\item ZT0 OR reference_hour can be passed to state the time in GMT TZ when the lights turned on
+}
 }

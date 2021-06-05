@@ -2,10 +2,20 @@
 % Please edit documentation in R/trace-filters.R
 \name{Mode}
 \alias{Mode}
-\title{Take the mode of a distribution}
+\title{Take the mode of a distribution
+Given a numeric input, find the number that is the most common
+Taken from https://stackoverflow.com/questions/2547402/how-to-find-the-statistical-mode}
 \usage{
 Mode(x)
 }
+\arguments{
+\item{x}{Numeric vector}
+}
+\value{
+Mode of the vector. If several (equally frequent) modes are found, return the first one
+}
 \description{
 Take the mode of a distribution
+Given a numeric input, find the number that is the most common
+Taken from https://stackoverflow.com/questions/2547402/how-to-find-the-statistical-mode
 }
