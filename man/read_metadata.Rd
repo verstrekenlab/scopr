@@ -6,6 +6,9 @@
 \usage{
 read_metadata(metadata_path)
 }
+\arguments{
+\item{metadata_path}{Path to a metadata file}
+}
 \value{
 data.table with loaded metadata (not validated)
 }

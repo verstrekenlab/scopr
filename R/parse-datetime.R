@@ -2,6 +2,7 @@
 #'
 #' Expected format is "YYYY-MM-DD"
 #' @importFrom readr parse_date stop_for_problems
+#' @noRd
 parse_date <- function(x, format="", tz="UTC"){
 
   # if x is already one of these three classes, it is already parsed
@@ -24,6 +25,7 @@ parse_date <- function(x, format="", tz="UTC"){
 #'
 #' Expected format is "HH:MM:SS"
 #' @importFrom readr parse_time stop_for_problems
+#' @noRd
 parse_time <- function(x, format="", tz="UTC"){
 
   x <-  as.character(x)

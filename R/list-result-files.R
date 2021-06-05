@@ -50,7 +50,8 @@ parse_datetime <- function(x){
 #' * [experiment_info] -- to show the metadata of a specific experiment
 #' @export
 list_result_files <- function(result_dir, index_file=NULL){
-  path = NULL
+  path <- datetime <- NULL
+
 
   # the key identifies a unique ethoscope start in a given database
   key <- c("date", "time","machine_name")

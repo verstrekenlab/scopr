@@ -13,6 +13,8 @@ Mode_filter(data, columns, ...)
 
 \item{columns}{Character vector of column names in data.
 Error is raised if a passed column name is not available in the data}
+
+\item{...}{Additional arguments to Mode_filter_one_column}
 }
 \value{
 Filtered data

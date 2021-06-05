@@ -43,7 +43,7 @@ database_is_available <- function(FILE) {
 #' a whole extra day is prepended to the data, because the time series always starts with an L phase (even if this L phase is fully NA)
 #' @param columns Columns to be loaded from the dbfile. Checked against the VAR_MAP for availability
 #' @param time_stamp Used to memoise the function
-#' @return
+#' @return data.table with contents of corresponding ROI_X table in the sqlite3 file
 read_single_roi <- function(FILE,
                              region_id,
                              min_time = 0,
@@ -93,7 +93,7 @@ read_single_roi <- function(FILE,
             I will use a default VAR_MAP, which is always identical to the original VAR_MAP.
             You can dismiss this message if your data is loaded correctly!
       ")
-      var_map <- as.data.table(scopr:::var_map)
+      var_map <- as.data.table(var_map)
     }
 
     data.table::setkey(var_map, var_name)

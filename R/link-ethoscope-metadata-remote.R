@@ -2,8 +2,7 @@
 #' @param remote_dir the url of the result directory on the data server
 #' @param overwrite_local whether to download all files.
 #' The default, `FALSE`, is to only fetch files if they are newer on the remote.
-#' @inheritParams link_ethoscope_metadata
-#' @inheritParams load_ethoscope
+#' @param verbose Log info messages or not
 #' @export
 link_ethoscope_metadata_remote <- function(x,
                                            remote_dir,

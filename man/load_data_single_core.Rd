@@ -8,6 +8,11 @@ It uses one and only one core}
 \usage{
 load_data_single_core(q, ...)
 }
+\arguments{
+\item{q}{Metadata subset with animals from the same experiment}
+
+\item{...}{Additional arguments to load_row}
+}
 \description{
 This function will be executed for every entry in q_l
 i.e. once for every file

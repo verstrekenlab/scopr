@@ -97,9 +97,17 @@ parse_single_roi <- function(data,
 #'
 #' @param FUN, function or list, a function or list of functions that processes the data loaded from the SQLite file in some meaningful way
 #' @inheritParams read_single_roi
+#' @inheritParams annotate_single_roi
+#' @param id character, unique to the animal to be loaded
+#' @param path character, absolue path to dbfile (sqlite)
+#' @param file_size Size of dbfile to be loaded in bytes
+#' @param verbose Whether to report progress or not (via console)
+#' @param updateProgress_load Function to call when a new animal is loaded successfully from the sqlite database
+#' @param updateProgress_annotate Function to call when a new animal is processed successfully
 #' @import data.table
 #' @importFrom behavr setbehavr
-parse_single_roi_wrapped <- function(id, region_id, path,
+parse_single_roi_wrapped <- function(id, region_id,
+                                     path,
                                      min_time = 0,
                                      max_time = +Inf,
                                      reference_hour = NULL,

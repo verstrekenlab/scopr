@@ -21,7 +21,11 @@ parse_single_roi_wrapped(
 )
 }
 \arguments{
+\item{id}{character, unique to the animal to be loaded}
+
 \item{region_id}{numeric, position of the animal's roi in the ethoscope's layout. Should be 1-20 for the standard 20-animal arena}
+
+\item{path}{character, absolue path to dbfile (sqlite)}
 
 \item{min_time}{numeric, time in seconds from the start of the experiment after which the data is loaded into R}
 
@@ -32,7 +36,17 @@ a whole extra day is prepended to the data, because the time series always start
 
 \item{columns}{Columns to be loaded from the dbfile. Checked against the VAR_MAP for availability}
 
+\item{file_size}{Size of dbfile to be loaded in bytes}
+
+\item{verbose}{Whether to report progress or not (via console)}
+
 \item{FUN, }{function or list, a function or list of functions that processes the data loaded from the SQLite file in some meaningful way}
+
+\item{updateProgress_load}{Function to call when a new animal is loaded successfully from the sqlite database}
+
+\item{updateProgress_annotate}{Function to call when a new animal is processed successfully}
+
+\item{...}{Additional arguments to FUN}
 }
 \description{
 Loading is done by read_single_roi. Annotation is done by annotate_single_roi

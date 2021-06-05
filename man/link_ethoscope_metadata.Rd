@@ -15,12 +15,7 @@ link_ethoscope_metadata_remote(
   verbose = TRUE
 )
 
-link_ethoscope_metadata(
-  x,
-  result_dir = NULL,
-  result_comp = NULL,
-  index_file = NULL
-)
+link_ethoscope_metadata(x, result_dir = NULL, index_file = NULL)
 }
 \arguments{
 \item{x}{object such as a \link{data.frame}, or the name of a file (see detail)}
@@ -33,6 +28,8 @@ link_ethoscope_metadata(
 
 \item{overwrite_local}{whether to download all files.
 The default, \code{FALSE}, is to only fetch files if they are newer on the remote.}
+
+\item{verbose}{Log info messages or not}
 }
 \value{
 a \link[data.table:data.table]{data.table::data.table} with the same rows as x, and extra columns for further data loading

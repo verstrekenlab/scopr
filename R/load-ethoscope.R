@@ -1,6 +1,8 @@
 #' This function will be executed for every entry in q_l
 #' i.e. once for every file
 #' It uses one and only one core
+#' @param q Metadata subset with animals from the same experiment
+#' @param ... Additional arguments to load_row
 load_data_single_core <- function(q, ...){
 
   # Make the metadata compatible with lapply
@@ -20,6 +22,7 @@ load_data_single_core <- function(q, ...){
 
 #' Load and preanalyze all entries from one dbfile
 #' Several cores can be used (if ncores>1)
+#' @param q_l List of metadata subsets where every subset represents animals from the same experiment i.e. contained in the same dbfile
 #' @param ncores number of cores to use for optional parallel processing (experimental).
 #' @param ... Extra arguments to be passed to load_row
 #' @seealso load_row
@@ -56,8 +59,11 @@ check_arg_list_for_dups <- function(arg_list) {
 
 #' Prepare a list of arguments to pass to parse_single_roi
 #' using arguments explicitly declared by the user or taken from the metadata
-#' @param min_time, max_time load only data between `min_time` and `max_time` (in seconds).
-#' This time is *relative to the start of the experiment*.
+#' @param row Metadata for one animal only
+#' @param min_time load only data > `min_time` (in seconds).
+#' This time is *relative to the start of the experiment (not ZT0)*.
+#' @param max_time load only data < `max_time` (in seconds).
+#' This time is *relative to the start of the experiment (not ZT0)*.
 #' @param reference_hour hour, in the day, to use as ZT0 reference.
 #' When unspecified, time will be relative to the start of the experiment.
 #' @param cache the name of a local directory to cache results for faster subsequent data loading.
@@ -70,7 +76,7 @@ check_arg_list_for_dups <- function(arg_list) {
 #' @param map_arg  OPTIONAL a list to map `FUN` arguments to metavariables values. See details
 #' @details `map_arg` is a list of the form `list(fun_arg = "metavariable")`.
 #' When provided, `FUN` will set specific arguments (`fun_arg`) to the value of a (quoted) metavariable.
-#' @param ... extra arguments to be passed to `FUN`
+#' @param ... Extra arguments to be passed to `FUN`
 #'
 load_row <- function(row,
                      min_time = 0,

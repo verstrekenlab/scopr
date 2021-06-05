@@ -50,7 +50,7 @@
 #' * [metadata tutorial](https://rethomics.github.io/metadata.html) -- how to work with metadata
 #' @export
 #'
-link_ethoscope_metadata <- function(x, result_dir=NULL, result_comp = NULL, index_file=NULL){
+link_ethoscope_metadata <- function(x, result_dir=NULL, index_file=NULL){
   # result_dir = NULL, index_file = NULL
   pay = experiment_id = n = .N = region_id = id = . = path = dst_path = key = NULL
   query <- x
@@ -79,7 +79,7 @@ link_ethoscope_metadata <- function(x, result_dir=NULL, result_comp = NULL, inde
     # FIXME I dont know if this line should be here or not
     # I feel like if we dont put it, an error will happen
     # because after this if / else if blockm query is supposed to be a data.frame
-    query <- out 
+    query <- out
   }
 
   # case 2 query is an already loaded data.frame

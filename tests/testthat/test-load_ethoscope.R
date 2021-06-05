@@ -69,6 +69,11 @@ test_that("several annotations can be placed in the same call", {
 })
 
 
+dummy_fun <- function(data, velocity_correction_coef = 0.001) {
+  message("velocity_correction_coef = ", velocity_correction_coef)
+  return(data)
+}
+
 
 test_that("different coefficients can be passed through load_ethoscope", {
 
@@ -80,13 +85,25 @@ test_that("different coefficients can be passed through load_ethoscope", {
   )
   query <- link_ethoscope_metadata(query, dir)
 
-  if (require("sleepr")) cnd <- rlang::catch_cnd({
+  cnd <- rlang::catch_cnd({
     load_ethoscope(
       query, verbose = F,
-      FUN = sleepr::sleep_annotation,
+      FUN = dummy_fun
+    )
+  }, classes="message")
+
+  expect_equal(cnd$message, "velocity_correction_coef = 0.001\n")
+
+
+    cnd <- rlang::catch_cnd({
+    load_ethoscope(
+      query, verbose = F,
+      FUN = dummy_fun,
       velocity_correction_coef = 0.004
     )
-  })
+  }, classes="message")
+
+  expect_equal(cnd$message, "velocity_correction_coef = 0.004\n")
 
 })
 

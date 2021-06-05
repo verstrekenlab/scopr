@@ -31,7 +31,7 @@ a whole extra day is prepended to the data, because the time series always start
 \item{time_stamp}{Used to memoise the function}
 }
 \value{
-
+data.table with contents of corresponding ROI_X table in the sqlite3 file
 }
 \description{
 This function performs the following actions

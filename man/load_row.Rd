@@ -20,8 +20,13 @@ load_row(
 )
 }
 \arguments{
-\item{min_time, }{max_time load only data between \code{min_time} and \code{max_time} (in seconds).
-This time is \emph{relative to the start of the experiment}.}
+\item{row}{Metadata for one animal only}
+
+\item{min_time}{load only data > \code{min_time} (in seconds).
+This time is \emph{relative to the start of the experiment (not ZT0)}.}
+
+\item{max_time}{load only data < \code{max_time} (in seconds).
+This time is \emph{relative to the start of the experiment (not ZT0)}.}
 
 \item{reference_hour}{hour, in the day, to use as ZT0 reference.
 When unspecified, time will be relative to the start of the experiment.}
@@ -39,7 +44,7 @@ immediately after is has been loaded.}
 
 \item{map_arg}{OPTIONAL a list to map \code{FUN} arguments to metavariables values. See details}
 
-\item{...}{extra arguments to be passed to \code{FUN}}
+\item{...}{Extra arguments to be passed to \code{FUN}}
 }
 \description{
 Call parse_single_roi with sensible arguments

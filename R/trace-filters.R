@@ -21,11 +21,14 @@ Mode <- function(x) {
 #' @return Filtered data
 #' @importFrom zoo rollapply
 Mode_filter_one_column <- function(data, column, window_width=10) {
+
+  id <- target_column_forbidden_name <- . <- NULL
+
   data$target_column_forbidden_name <- data[, column]
   data <- data[, .(target_column_forbidden_name := zoo::rollapply(target_column_forbidden_name, FUN = Mode, width = window_width, partial = T)
     ), by = id]
 
-  data[, column] <- data$target_column_forbidden_name 
+  data[, column] <- data$target_column_forbidden_name
   data[target_column_forbidden_name := NULL]
   return(data)
 }
@@ -37,7 +40,8 @@ Mode_filter_one_column <- function(data, column, window_width=10) {
 #' @param data A dataframe with some column(s) that need(s) to be filtered
 #' @param columns Character vector of column names in data.
 #' Error is raised if a passed column name is not available in the data
-#' @return Filtered data 
+#' @param ... Additional arguments to Mode_filter_one_column
+#' @return Filtered data
 Mode_filter <- function(data, columns, ...) {
 
   stopifnot(all(columns %in% colnames(data)))

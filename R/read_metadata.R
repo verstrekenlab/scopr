@@ -4,6 +4,8 @@
 #' * with comments (lines starting with #)
 #' * ZT0 OR reference_hour can be passed to state the time in GMT TZ when the lights turned on
 #' @importFrom data.table as.data.table
+#' @importFrom utils read.table
+#' @param metadata_path Path to a metadata file
 #' @return data.table with loaded metadata (not validated)
 read_metadata <- function(metadata_path) {
 

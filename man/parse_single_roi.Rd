@@ -46,6 +46,10 @@ a whole extra day is prepended to the data, because the time series always start
 
 \item{FUN}{A function or list of functions}
 
+\item{updateProgress_load}{Function to call when a new animal is loaded successfully from the sqlite database}
+
+\item{updateProgress_annotate}{Function to call when a new animal is processed successfully}
+
 \item{...}{Additional arguments to FUN}
 }
 \value{

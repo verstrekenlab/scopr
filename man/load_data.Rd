@@ -8,6 +8,8 @@ Several cores can be used (if ncores>1)}
 load_data(q_l, ncores = 1, ...)
 }
 \arguments{
+\item{q_l}{List of metadata subsets where every subset represents animals from the same experiment i.e. contained in the same dbfile}
+
 \item{ncores}{number of cores to use for optional parallel processing (experimental).}
 
 \item{...}{Extra arguments to be passed to load_row}

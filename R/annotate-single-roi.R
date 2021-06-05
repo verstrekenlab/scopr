@@ -11,6 +11,8 @@
 #' @param ... Additional arguments to FUN
 annotate_one_func <- function(data, FUN, ...) {
 
+  region_id <- path <- id <- datetime <- NULL
+
   # Run the annotation function on the data loaded from SQL
   # The return value is a behavr table with data for a single fly
   # The metadata in this table is a one row table
@@ -90,6 +92,8 @@ annotate_single_roi <- function(data, FUN=NULL, ...) {
 #' @param ... Additional arguments to annotae_single_roi
 #' @export
 annotate_all <- function(data, ...) {
+
+  id <- NULL
 
   metadata <- data[, meta = T]
   data <- data[, annotate_single_roi(.SD, ...), by = eval(data.table::key(data))]
