@@ -11,9 +11,9 @@
 
 scopr_example <- function(path = NULL) {
   if (is.null(path)) {
-    dir(system.file("extdata", package = "fslscopr"))
+    dir(system.file("extdata", package = "scopr"))
   } else {
-    system.file("extdata", path, package = "fslscopr", mustWork = TRUE)
+    system.file("extdata", path, package = "scopr", mustWork = TRUE)
   }
 }
 
@@ -21,6 +21,6 @@ scopr_example <- function(path = NULL) {
 #' @rdname scopr_example
 #' @export
 scopr_example_dir <- function() {
-  system.file("extdata", package = "fslscopr")
+  system.file("extdata", package = "scopr")
 }
 
