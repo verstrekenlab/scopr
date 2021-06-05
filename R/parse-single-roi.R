@@ -1,17 +1,34 @@
-# for memoisation
-# we obtain data from one ROI and optionaly preanalyse it, by applying FUN.
-# this function is run on single individual data
+#' Load data from a SQLite database for one ROI and preanalyze it
+
+#' We obtain data from one ROI and optionaly preanalyse it, by applying FUN.
+#' This function is run on single individual data
+#' The actual work is done by parse_single_roi_wrapped. This function just does the following things before calling parse_single_roi_wrapped:
+#' \begin{itemize}
+#' \item{Figure out which columns need to be queried from the SQLite file}
+#' \item{Report information messages if the user wants to}
+#' \item{Set up a memoised cache}
+#' \item{Confirm the passed input leads to a sqlite file (the file ends in db) and check its size. The size is used later on to check whether the cache is invalid or not}
+#' \end{itemize}
+#' Very importantly, after calling parse_single_roi_wrapped, the passed metadata input is bound to the loaded data into a behavr table
 #' @param data one row data.table corresponding to a row of the original (and then linked) metadata
-#' @importFrom rlang list2
+#' @param verbose boolean, if TRUE, all information messages are printed on the console. The loading process is silent otherwise
+#' @param cache character, path to a folder in the filesystem where cache files should be saved or searched to speed up future reloads of the same data
+#' @inheritParams annotate_single_roi
+#' @inheritParams read_single_roi
+#' @inheritParams parse_single_roi_wrapped
+#' ... Additional arguments to FUN
+#' @importFrom memoise cache_filesystem
+#' @return A behavr table containing the loaded and pre analyzed data
+#' @seealso \url{https://github.com/shaliulab/behavr}
 parse_single_roi <- function(data,
                              min_time = 0,
                              max_time = +Inf,
                              reference_hour = NULL,
-                             verbose = TRUE,
                              columns = NULL,
                              cache=NULL,
                              FUN = NULL,
-                             updateProgress = NULL,
+                             updateProgress_load = NULL,
+                             updateProgress_annotate = NULL,
                              ...){
 
   roi_idx <- NULL
@@ -28,20 +45,7 @@ parse_single_roi <- function(data,
       columns <- needed_columns(...)
   }
 
-  columns <- c(columns, rlang::list2(...)$extra_columns)
 
-  # if verbose, log some information to the user so he knows
-  # a new fly is being loaded (progress tracking)
-  if (verbose) {
-    info_message <- sprintf("Loading ROI number %i from:\n\t%s\n", region_id, path)
-    message(info_message)
-    # additionally, if a progress bar is available, update it as well
-    # TODO The message is getting updated but the value is not
-
-    if (is.function(updateProgress)) {
-     updateProgress(detail = info_message)
-    }
-  }
 
   # Check the path leads to a sqlite3 file
   if (tools::file_ext(path) != "db")
@@ -64,57 +68,61 @@ parse_single_roi <- function(data,
 
 
   # Call the analysis function, cached or not
-
   out <- parse_single_roi_wrapped_memo(
-    # a unique identifier for a fly
     id,
-    # an integer indicating the position of the fly in the monitor
     region_id,
-    # absolute path to the sqlite3 file (dbfile)
     path,
-    # min and max time to be loaded
-    # can be more than 24 i.e. span more than one ZT cycle
     min_time,
     max_time,
-    # time when ZT0 happens in the same timezone as the ethoscope timezone
     reference_hour,
-    # what columns to fetch
-    # TODO Why not getting columns inside this function
     columns,
-
     file_size = fs,
     FUN,
     ...
   )
 
-  # TODO Verify this
-  # The return value is a data table i.e not a behavr table with a metadata
-  if ("id" %in% colnames(out)) data.table::setkey(out, id)
   if (!is.null(out))
     fslbehavr::setbehavr(out, data)
-
   return(out)
-
 }
 
 
+#' Load data from a sqlite database and preanalyze (annotate) it with FUN
 #'
+#' Loading is done by read_single_roi. Annotation is done by annotate_single_roi
+#'
+#' @param FUN, function or list, a function or list of functions that processes the data loaded from the SQLite file in some meaningful way
+#' @inheritParams read_single_roi
+#' @import data.table
+#' @importFrom behavr setbehavr
 parse_single_roi_wrapped <- function(id, region_id, path,
                                      min_time = 0,
                                      max_time = +Inf,
                                      reference_hour = NULL,
                                      columns = NULL,
                                      file_size = 0,
+                                     verbose = FALSE,
+                                     updateProgress_load,
+                                     updateProgress_annotate,
                                      FUN = NULL,
                                      ...
 ){
 
-
+  # TODO The file_size is not used
 
   ## Read data for a single ROI (fly) from the SQLite file
   ## ----
-  time_stamp = NULL
-  message(sprintf("I am calling read single roi with region id %d", region_id))
+  time_stamp <- NULL
+
+  # if verbose, log some information to the user so he knows
+  # a new fly is being loaded (progress tracking)
+  if (verbose) {
+    info_message <- sprintf("Loading ROI number %i from:\n\t%s\n", region_id, path)
+    message(info_message)
+    # additionally, if a progress bar is available, update it as well
+    # TODO The message is getting updated but the value is not
+
+  }
 
   out <- read_single_roi(path,
                          region_id = region_id,
@@ -125,17 +133,21 @@ parse_single_roi_wrapped <- function(id, region_id, path,
                          time_stamp = time_stamp
   )
 
+  if (is.function(updateProgress_load)) {
+     info_message <- sprintf("Loaded ROI number %i from:\n\t%s\n", region_id, path)
+     updateProgress_load(detail = info_message)
+  }
 
+
+  ## ----
+  ## Check whether any data could be loaded or not
   if(is.null(out) || nrow(out) == 0){
-    warning(sprintf("No data in ROI %i, from FILE %s. Skipping", region_id, path))
+    warning("No data in ROI ", %i, " from FILE ", %s. " Skipping")
     return(NULL)
   }
 
   ## ----
-  ## Generate the id column of the result of read_single_roi
-  ## and make it a behavr table by attaching a temporary metadata
-  ## that just contains id
-  ## ----
+  ## Create the id column and put it in the first position
   # Get a vector with the original column names
   old_cols <- data.table::copy(names(out))
   # Create a new column called id
@@ -143,20 +155,34 @@ parse_single_roi_wrapped <- function(id, region_id, path,
   # of the variable with the same name
   # This variable is passed to parse_single_roi via
   # the data argument, which is a row in the linked metadata
-  out[,id := id]
+  out[,id := id] # column = value of id (will be equal for all rows)
 
   # Make id the first column
   data.table::setcolorder(out, c("id", old_cols))
-  # Make id as key of the data table
+
+  ## ----
+  ## Set the key of the data.table to the newly created id column
+  ## and use it to make a behavr table by attaching a temporary metadata
+  ## that just contains id
   data.table::setkeyv(out, "id")
-
-  # Create a behavr table with a metadata table
-  # that contains just the id and where id is the key
-  # TODO This is so
-
   met <- data.table::data.table(id = id, key = "id")
-  fslbehavr::setbehavr(out, met)
-  # ----
-  annot <- annotate(out, FUN, ...)
+  behavr::setbehavr(out, met)
+
+
+  ## ----
+  ## Preanalyze or annotate the loaded data
+
+  if (verbose) {
+  info_message <- paste0('Running annotation function for ', path, ' ', region_id)
+  message(info_message)
+  }
+
+  annot <- annotate_single_roi(out, FUN, ...)
+
+  if (is.function(updateProgress_load)) {
+      info_message <- paste0('Ran annotation function for ', path, ' ', region_id)
+      updateProgress_load(detail = info_message)
+  }
+
   return(annot)
 }
