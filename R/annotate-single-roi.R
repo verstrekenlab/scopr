@@ -82,6 +82,8 @@ annotate_single_roi <- function(data, FUN=NULL, ...) {
 }
 
 
+#' Annotate a behavr table, possibly with more than one id (animal)
+#'
 #' @import data.table
 #' @importFrom behavr setmeta
 #' @param data A multi animal behavr table to be pre analyzed or annotated

@@ -16,7 +16,7 @@
 #' @inheritParams annotate_single_roi
 #' @inheritParams read_single_roi
 #' @inheritParams parse_single_roi_wrapped
-#' ... Additional arguments to FUN
+#' @param ... Additional arguments to FUN
 #' @importFrom memoise cache_filesystem
 #' @return A behavr table containing the loaded and pre analyzed data
 #' @seealso \url{https://github.com/shaliulab/behavr}
