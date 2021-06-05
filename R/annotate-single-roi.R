@@ -45,7 +45,7 @@ annotate_one_func <- function(data, FUN, ...) {
 #' @details All functions should summarise using the same windows
 #' out should contain a single id. If you need to analyze data for several flies
 #' call `annotate_single_roi` like this: `data[, annotate(.SD, FUN, progress), by = "id"]`
-#' or call `fslscopr::annotate_all`. This is needed because annotate_single_roi
+#' or call `scopr::annotate_all`. This is needed because annotate_single_roi
 #' is NOT id-aware (because it expects a single animal). As such, the result is NOT a behavr table!
 #' @inheritParams annotate_one_func
 #' @param FUN A function or list of functions

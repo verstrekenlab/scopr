@@ -82,7 +82,7 @@ parse_single_roi <- function(data,
   )
 
   if (!is.null(out))
-    fslbehavr::setbehavr(out, data)
+    behavr::setbehavr(out, data)
   return(out)
 }
 
@@ -142,7 +142,7 @@ parse_single_roi_wrapped <- function(id, region_id, path,
   ## ----
   ## Check whether any data could be loaded or not
   if(is.null(out) || nrow(out) == 0){
-    warning("No data in ROI ", %i, " from FILE ", %s. " Skipping")
+    warning("No data in ROI ", region_id, " from FILE ", path, " Skipping")
     return(NULL)
   }
 

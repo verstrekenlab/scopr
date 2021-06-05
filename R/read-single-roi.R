@@ -93,7 +93,7 @@ read_single_roi <- function(FILE,
             I will use a default VAR_MAP, which is always identical to the original VAR_MAP.
             You can dismiss this message if your data is loaded correctly!
       ")
-      var_map <- as.data.table(fslscopr:::var_map)
+      var_map <- as.data.table(scopr:::var_map)
     }
 
     data.table::setkey(var_map, var_name)
