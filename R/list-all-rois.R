@@ -7,7 +7,7 @@
 list_all_rois <- function(FILE){
   roi_idx = NULL
   tryCatch({
-    con <- dbConnectSafe(FILE)
+    con <- dbConnectFriendly(FILE)
     roi_map <- data.table::as.data.table(RSQLite::dbGetQuery(con, "SELECT * FROM ROI_MAP"))
   }, finally = {
     RSQLite::dbDisconnect(con)

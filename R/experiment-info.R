@@ -13,7 +13,7 @@
 experiment_info <- function(FILE){
 
   # Connect to the result file (`.db`)
-  con <- RSQLite::dbConnect(RSQLite::SQLite(), FILE, flags=RSQLite::SQLITE_RO)
+  con <- dbConnectFriendly(FILE)
 
   # Try reading the METADATA table
   tryCatch({

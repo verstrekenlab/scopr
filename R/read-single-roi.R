@@ -69,7 +69,7 @@ read_single_roi <- function(FILE,
 
   ## 2 Connect to the sqlite3 file
   ## ----
-  con <- RSQLite::dbConnect(RSQLite::SQLite(), FILE, flags = RSQLite::SQLITE_RO)
+  con <- dbConnectFriendly(FILE)
 
   tryCatch({
 

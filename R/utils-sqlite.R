@@ -1,6 +1,8 @@
+#' Try to connect to a sqlite 3 database
+#' If an error is encountered, report it in a friendly-way
 #' @import RSQLite
 #' @noRd
-dbConnectSafe <- function(file, flags=RSQLite::SQLITE_RO, ...) {
+dbConnectFriendly <- function(file, flags=RSQLite::SQLITE_RO, ...) {
 
   con <- tryCatch({
     con <- RSQLite::dbConnect(RSQLite::SQLite(), file, flags=flags, ...)
