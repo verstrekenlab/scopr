@@ -21,9 +21,9 @@ test_that("parse_single_roi works with memosiation", {
   cache <- tempfile("scopr_test_cache")
 
   data <- data.table::data.table(id="xxx", region_id=1, file_info=list(list(path=test_file)), key="id")
-  a <- scopr::parse_single_roi(data, verbose=F)
-  b <- scopr::parse_single_roi(data, cache = cache, verbose = F)
-  c <- scopr::parse_single_roi(data, cache = cache, verbose = F)
+  a <- scopr:::parse_single_roi(data, verbose=F)
+  b <- scopr:::parse_single_roi(data, cache = cache, verbose = F)
+  c <- scopr:::parse_single_roi(data, cache = cache, verbose = F)
 
   expect_identical(a, b)
   expect_true(all(c == b) & identical(c[meta=T], b[meta=T]))
@@ -41,14 +41,14 @@ test_that("parse_single_roi works with autocolumn finding", {
     "x"
   }
   foo
-  a <- scopr::parse_single_roi(data, FUN= foo, verbose = F)
+  a <- scopr:::parse_single_roi(data, FUN= foo, verbose = F)
   a[meta=T]
 
   attr(foo, "needed_columns") <- function(...){
     "www"
   }
 
-  expect_error(scopr::parse_single_roi(data, FUN= foo, verbose=F))
+  expect_error(scopr:::parse_single_roi(data, FUN= foo, verbose=F))
 
 })
 
@@ -71,12 +71,12 @@ test_that("custom annotation functions can be passed", {
     "x"
   }
   foo
-  a <- scopr::parse_single_roi(data, FUN = foo, verbose = F)
+  a <- scopr:::parse_single_roi(data, FUN = foo, verbose = F)
   a[meta = T]
 
   attr(foo, "needed_columns") <- function(...){
     "www"
   }
 
-  expect_error(scopr::parse_single_roi(data, FUN= foo, verbose=F))
+  expect_error(scopr:::parse_single_roi(data, FUN= foo, verbose=F))
 })
