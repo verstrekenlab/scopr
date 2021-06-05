@@ -6,16 +6,18 @@ build_query <- function(result_dir,
                         ) {
   data = .SD = .N = time = n = machine_name = datetime = path = NULL
 
-  # Create a data table displaying all the sqlite3 files available in the database
-  # at result_dir
+  ## ----
+  ##
+  # Create a data table displaying all the sqlite3 files
+  # available in the database at result_dir
   # columns: machine_id, machine_name, datetime, date, time, path
   files_info <- list_result_files(result_dir, index_file)
   mykey <- data.table::key(files_info)
 
   # Subset this table by keeping only the last (.N)
   # entry of each group with same key
-  # The key is tipically a combination of date, time and machine_name
-  # TODO Not sure why this is necessary
+  # The key is a combination of date, time and machine_name
+  # This allows R to discard short runs failed before the actual experiment
   unique_fi <- files_info[, .SD[.N], by = mykey]
 
   key <- c("date", "time","machine_name")
