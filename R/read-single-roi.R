@@ -1,14 +1,23 @@
 #' Can I read the sqlite3 database, or is it locked
 #' @param FILE Path to sqlite3 database file
+#' @importFrom RSQLite dbConnect dbDisconnect
 #' @return Boolean stating whether the METADATA table can be read or not
 database_is_available <- function(FILE) {
   tryCatch({
     # create the RSQLite connection
     con <- RSQLite::dbConnect(RSQLite::SQLite(), FILE, flags = RSQLite::SQLITE_RO)
     # try reading a table that should ALWAYS be in the dbfiles
-    metadata <- data.table::as.data.table(RSQLite::dbGetQuery(con, "SELECT * FROM METADATA;"))
-    return(all(colnames(metadata) == c("field", "value")))
-  }, error = function(e) FALSE)
+    tryCatch({
+      metadata <- data.table::as.data.table(RSQLite::dbGetQuery(con, "SELECT * FROM METADATA;"))
+      ok <- all(colnames(metadata) == c("field", "value"))
+      return(ok)
+    }, finally = function() {
+      RSQLite::dbDisconnect(con)
+    })
+
+  }, error = function(e) {
+    FALSE
+  })
 }
 
 read_single_roi <- function(FILE,
