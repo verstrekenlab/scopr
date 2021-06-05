@@ -50,6 +50,16 @@ read_single_roi <- function(FILE,
     # i.e. distance (cannot be negative), angle (cannot be more than 2pi),
     # bool, interaction, relative_distance_1e6, ...
     var_map <- data.table::as.data.table(RSQLite::dbGetQuery(con, "SELECT * FROM VAR_MAP"))
+    if(nrow(var_map) < 8) {
+      warning("
+            Expected number of rows in VAR_MAP is less than expected (8).
+            Probably the table is not complete because its creation was interrupted.
+            I will use a default VAR_MAP, which is always identical to the original VAR_MAP.
+            You can dismiss this message if your data is loaded correctly!
+      ")
+      var_map <- as.data.table(fslscopr:::var_map)
+    }
+
     data.table::setkey(var_map, var_name)
     # NOTE the var_map is loaded so
     # 1. the program can cross
