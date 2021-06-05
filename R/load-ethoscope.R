@@ -1,20 +1,122 @@
-#' Load data from ethoscope result files
-#'
-#' This function is used to import behavioural data generated
-#' by the [ethoscope platform](http://gilestrolab.github.io/ethoscope/).
-#' That is it loads multiple `.db` files into a single `R` [fslbehavr::behavr] table.
-#'
-#' @param metadata [data.table::data.table] used to load data (see detail)
-#' @param min_time,max_time load only data between `min_time` and `max_time` (in seconds).
+
+
+#' This function will be executed for every entry in q_l
+#' i.e. once for every file
+#' It uses one and only one core
+load_data_single_core <- function(q, ...){
+
+  # Make the metadata compatible with lapply
+  # by making it a list of rows
+  l_rows <- lapply(1:nrow(q), function(i) { q[i,] })
+
+  # call parse_single_roi with l_rows combined with the arguments
+  # parsed from the metadata file
+  l_dt <- lapply(l_rows, function(x) load_row(x, ...))
+
+  # restore a behavr table from a list of behavr tables
+  # each element is the behavr table of a single fly
+  res <- behavr::bind_behavr_list(l_dt)
+  return(res)
+}
+
+
+#' Load and preanalyze all entries from one dbfile
+#' Several cores can be used (if ncores>1)
+#' @param ncores number of cores to use for optional parallel processing (experimental).
+#' @return behavr table
+#' @noRd
+load_data <- function(q_l, ncores=1, ...) {
+  if (ncores == 1) {
+    l_dt <- lapply(1:length(q_l), function(i) load_data_single_core(q_l[[i]], ...))
+  } else{
+      if (!requireNamespace("parallel", quietly = TRUE)) {
+      stop("`parallel` package needed for ncores > 1.
+           Please install it.",
+           call. = FALSE)
+    }
+    l_dt <- parallel::mclapply(1:length(q_l), function(i) load_data_single_core(q_l[[i]], ...), mc.cores = ncores)
+  }
+  return(l_dt)
+}
+
+check_arg_list_for_dups <- function(arg_list) {
+  dups <- duplicated(names(arg_list))
+  if (any(dups)) {
+    duplicate_args <- names(arg_list)[dups]
+    arg_list <- arg_list[!dups]
+    for (d in duplicate_args) {
+      warning("Argument ", d" was passed more than once. I will use value ", arg_list[d])
+    }
+  }
+  return (arg_list)
+}
+
+
+
+#' Call parse_single_roi with sensible arguments
+
+#' Prepare a list of arguments to pass to parse_single_roi
+#' using arguments explicitly declared by the user or taken from the metadata
+#' @param min_time, max_time load only data between `min_time` and `max_time` (in seconds).
 #' This time is *relative to the start of the experiment*.
 #' @param reference_hour hour, in the day, to use as ZT0 reference.
 #' When unspecified, time will be relative to the start of the experiment.
+#' @param cache the name of a local directory to cache results for faster subsequent data loading.
 #' @param verbose whether to print progress (a logical)
 #' @param columns optional vector of columns to be selected from the db file.
 #' Time (t) is always implicitly selected.
 #' When `NULL` and if `FUN` is set, columns can be retrieved automatically (from the attributes of `FUN`).
-#' @param cache the name of a local directory to cache results for faster subsequent data loading.
-#' @param ncores number of cores to use for optional parallel processing (experimental).
+load_row <- function(row, min_time=0, max_time=Inf, verbose=FALSE, cache=NULL, columns, FUN, ...){
+
+  # initialize a list of arguments to parse_single_roi
+  arg_list <- list(row,
+                  min_time = min_time,
+                  max_time = max_time,
+                  verbose = verbose,
+                  columns = columns,
+                  cache = cache,
+                  FUN = FUN,
+                  ...
+                  )
+
+  # if reference_hour is NA, the user
+  # wants to get the reference_hour from the metadata
+
+  if (!is.null(reference_hour)) {
+    if (is.na(reference_hour)) map_arg <- c(map_arg, reference_hour = "reference_hour")
+    # if it is not NA, use the reference_hour argument passed to load_ethoscope
+  } else if (is.null(reference_hour)) {
+    arg_list <- c(arg_list, reference_hour = NULL)
+  }  else {
+    arg_list <- c(arg_list, reference_hour = reference_hour)
+  }
+
+  # create an additional list by parsing the elements in map_arg
+  # and mapping them to the right column in row
+  #
+  # for each key-val pair in map_arg
+  # assign to column key the value val
+
+  arg_val <- lapply(map_arg, function(x)row[,eval(parse(text=x))])
+  arg_list <- c(arg_list, arg_val)
+  arg_list <- check_arg_list_for_dups(arg_list)
+
+
+  # call parse_single_roi with this combined list of arguments
+  # parse single roi will
+  # * load the data into R
+  # * preanalyze / annotate it 
+  do.call(parse_single_roi, arg_list)
+}
+
+
+#' Load data from ethoscope result files
+#'
+#' This function is used to import behavioural data generated
+#' by the [ethoscope platform](http://gilestrolab.github.io/ethoscope/).
+#' That is it loads multiple `.db` files into a single `R` [behavr::behavr] table.
+#'
+#' @param metadata [data.table::data.table] used to load data (see detail)
 #' @param FUN function (optional) to transform the data from each individual
 #' immediately after is has been loaded.
 #' @param ... extra arguments to be passed to `FUN`
@@ -30,6 +132,8 @@
 #' `map_arg` is a list of the form `list(fun_arg = "metavariable")`.
 #' When provided, `FUN` will set specific arguments (`fun_arg`) to the value of a (quoted) metavariable.
 #'
+#' @inheritParams load_row
+#' @inheritParams load_data
 #' @examples
 #' dir <- paste0(scopr_example_dir(), "/ethoscope_results/")
 #' data(region_id_metadata)
@@ -53,7 +157,7 @@
 #'
 #' @seealso
 #' Take the mode of a distribution
-#' * [fslbehavr::behavr] -- to understand the output format
+#' * [behavr::behavr] -- to understand the output format
 #' * [experiment_info] -- to show information about a file/experiment
 #' * [list_result_files] -- to list available files
 #' @references
@@ -72,224 +176,26 @@ load_ethoscope <- function(metadata,
                            map_arg = NULL,
                            ...){
 
-  file_info = NULL
+  file_info <- NULL
 
+  metadata$fly_count <- 1:nrow(metadata)
 
-  # FIXME Find a better way of counting how many unique flies
-  # are there in the metadata
-  # This probably is suboptimal
+  # Split the metadata into a list where every element is a subset
+  # where every row has the same path
   experiment_id <- metadata[, sapply(file_info, function(x) x$path)]
-  metadata$fly_count <- as.integer(rownames(metadata))
   q_l <- split(metadata, experiment_id)
-  # total_count <- nrow(do.call(what = rbind, q_l))
+  for (q in q_l) data.table::setkeyv(q, data.table::key(metadata))
 
-  # Declare a closure taking a user provided query
-  # i.e. a metadata table
-  load_fun <- function(q){
-
-    # Each row of metadata refers to a unique fly.
-    # To each row we apply the function `parse_single_roi`
-    # and get the data for the corresponding fly in a behavr table object
-    # So, l_dt is a list of behavr tables, one per fly.
-    # If no data is available for a fly, the list element is `NULL`.
-    data.table::setkeyv(q, data.table::key(metadata))
-
-    # Make the metadata compatible with lapply
-    # by making it a list of rows
-    l_rows <- lapply(1:nrow(q), function(i) { q[i,] })
-
-
-    parse_wrapper <- function(row){
-
-      # initialize a list of arguments to parse_single_roi
-      arg_list = list(row,
-                      min_time = min_time,
-                      max_time = max_time,
-                      verbose = verbose,
-                      columns = columns,
-                      cache = cache,
-                      FUN = FUN,
-                      ...
-                      )
-
-      # if reference_hour is NA, the user wants to get the reference_hour
-      # from the metadata
-      message(sprintf('Reference hour is set to %s', reference_hour))
-      message("NA means it will be parsed from the metadata file")
-      message("as opposed to NULL, which means it is set to the onset of the experiment")
-
-
-      if (!is.null(reference_hour)) {
-        if (is.na(reference_hour)) map_arg <- c(map_arg, reference_hour = "reference_hour")
-
-        # if it is not NA, use the reference_hour argument passed to load_ethoscope
-      } else if (is.null(reference_hour)) {
-        arg_list <- c(arg_list, reference_hour = NULL)
-      }  else {
-        arg_list <- c(arg_list, reference_hour = reference_hour)
-      }
-
-
-      # create an additional list by parsing the elements in map_arg
-      # and mapping them to the right column in row
-      #
-      # for each key-val pair in map_arg
-      # assign to column key the value val
-
-      arg_val = lapply(map_arg, function(x) {
-        # with=F means select the column matching the content of
-        # as opposed to a column called x
-        unname(unlist(row[, x, with = F]))
-        # unlist to return a vector
-        # unname to make it an unnamed vector
-        # i.e. just a scalar
-      })
-
-      # combine the parsed arg_val with the
-      # already available arg_list
-      arg_list <- c(arg_list, arg_val)
-
-      dups <- duplicated(names(arg_list))
-      if (any(dups)) {
-        duplicate_args <- names(arg_list)[dups]
-        arg_list <- arg_list[!dups]
-        for (d in duplicate_args) {
-          warning(sprintf("argument %s was passed more than once", d))
-          warning(sprintf("I will use value %s", arg_list[d]))
-        }
-      }
-
-
-      # call parse_single_roi with this combined list of arguments
-      do.call(parse_single_roi, arg_list)
-    } # end of parse_wrapper
-
-    # call parse_single_roi with l_rows combined with the arguments
-    # parsed from the metadata file
-    l_dt <- lapply(l_rows, parse_wrapper)
-
-    # restore a behavr table from a list of behavr tables
-    # each element is the behavr table of a single fly
-    res <- fslbehavr::bind_behavr_list(l_dt)
-    return(res)
-
-  } # end of load_fun
-
-  # Call load_fun in parallel or unithreaded
+  # Call load_entries_from_one_file in parallel or unithreaded
   # depending on the value of ncores
-  if (ncores == 1) {
+  l_dt <- load_data(ql)
 
-    l_dt <- lapply(1:length(q_l), function(i) load_fun(q_l[[i]]))
-
-  } else{
-
-      if (!requireNamespace("parallel", quietly = TRUE)) {
-      stop("`parallel` package needed for ncores > 1.
-           Please install it.",
-           call. = FALSE)
-    }
-    l_dt <- parallel::mclapply(1:length(q_l), function(i) load_fun(q_l[[i]]), mc.cores = ncores)
-  }
-
-  ## TODO
-  ## Write logic that checks whether
-  ## getOption("retry_locked") is set and in that case
-  ## check it is empty
-  ## If it is not empty, we must try loading the failed files again
-  ## They failed because the database was locked
-  retry_locked <- getOption("retry_locked")
-  if (!is.null(retry_locked)) {
-    failed_files <- read.table(
-      retry_locked, sep = "\t",
-      header = c(
-        "FILE", "region_id",
-        "min_time", "max_time",
-        "reference_hour", "columns"
-      )
-    )
-
-    # sample_list <- list(
-    #   FILE = "/ethoscope_data/results/005aad42625f433eb4bd2b44f811738e/ETHOSCOPE_005/2020-11-17_17-45-26/2020-11-17_17-45-26_005aad42625f433eb4bd2b44f811738e.db",
-    #   region_id = 1,
-    #   min_time = 0,
-    #   max_time = Inf,
-    #   reference_hour = 7,
-    #   columns = NULL
-    # )
-
-    if (nrow(failed_files) != 0) {
-      out <- lapply(
-        1:nrow(failed_files),
-        function(i) {
-          # does not work rlang::exec(read_single_roi, x)
-          x <- as.list(failed_files[i,])
-          res <- NULL
-          trial <- 1
-          while (is.null(res)) {
-            trial <- trial + 1
-            if (trial > 2) {
-
-              notification <- glue::glue(
-                "Database {x$FILE} is still locked. Sleeping 20 seconds..."
-              )
-              if (requireNamespace("shiny")) {
-                shiny::showNotification(notification, type = "warning", duration = 15)
-              }
-              warning(notification)
-              Sys.sleep(20)
-            }
-            res <- read_single_roi(
-              FILE = x$FILE,
-              region_id = x$region_id,
-              min_time = x$min_time,
-              max_time = x$max_time,
-              reference_hour = x$reference_hour,
-              columns = x$columns
-            )
-          }
-          res
-        })
-
-      pos <- length(l_dt)
-      for (i in 1:length(out)) {
-        l_dt[[pos + i]] <- out[[i]]
-      }
-    }
-
-  }
-
-  # TODO This call to bind_behavr_list coerces a list of length 1
-  # so maybe just unlist or [[1]] would be enough
-  # keep columns available in all l_dts (in all flies)
-  # emit a warning if one coumn is available only in some
-  all_columns <- unlist(purrr::map(l_dt, colnames))
-  unique_columns <- unique(all_columns)
-
-  col_count <- table(all_columns)
-  columns_to_keep <- names(col_count)[col_count == length(l_dt)]
-  columns_to_drop <- names(col_count)[col_count < length(l_dt)]
-
-  l_dt2 <- purrr::map(l_dt, function(x) {
-    x[, columns_to_keep, drop = F, with = F]
-  })
-
-  dt <- fslbehavr::bind_behavr_list(l_dt2)
+  dt <- behavr::bind_behavr_list(l_dt)
 
   # Get rid of temporary data containers not needed anymore
   # Force R to garbage collect, making memory available
   rm(l_dt)
-  rm(l_dt2)
-
   gc()
-
-  # finally, annotate the phase based on T
-  # if t is within the first 12 hours of each 24 hour cycle,
-  # phase is L (Light)
-  # otherwise phase is D (Dark)
-  message("Computing phase")
-
-  dt[, phase := ifelse(t %% hours(24) > hours(12), 'D', 'L')]
-
   return(dt)
 }
 
