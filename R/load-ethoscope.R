@@ -45,7 +45,7 @@ check_arg_list_for_dups <- function(arg_list) {
     duplicate_args <- names(arg_list)[dups]
     arg_list <- arg_list[!dups]
     for (d in duplicate_args) {
-      warning("Argument ", d" was passed more than once. I will use value ", arg_list[d])
+      warning("Argument ", d, " was passed more than once. I will use value ", arg_list[d])
     }
   }
   return (arg_list)
