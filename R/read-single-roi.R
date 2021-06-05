@@ -1,10 +1,13 @@
 #' Can I read the sqlite3 database, or is it locked
 #' @param FILE Path to sqlite3 database file
+#' @return Boolean stating whether the METADATA table can be read or not
 database_is_available <- function(FILE) {
   tryCatch({
+    # create the RSQLite connection
     con <- RSQLite::dbConnect(RSQLite::SQLite(), FILE, flags = RSQLite::SQLITE_RO)
-    data.table::as.data.table(RSQLite::dbGetQuery(con, "SELECT * FROM ROI_1"))
-    TRUE
+    # try reading a table that should ALWAYS be in the dbfiles
+    metadata <- data.table::as.data.table(RSQLite::dbGetQuery(con, "SELECT * FROM METADATA;"))
+    return(all(colnames(metadata) == c("field", "value")))
   }, error = function(e) FALSE)
 }
 
@@ -192,8 +195,8 @@ read_single_roi <- function(FILE,
       # get a timestamp in hours since the beginning of the day
       # i.e %Y-%m-%d 10:30:12 becomes 10 + 0.5 + 1/300 hours
       hour_start <- as.numeric(format(p, "%H")) +
-        as.numeric(format(p, "%M")) / 60 +
-        as.numeric(format(p, "%S")) / 3600
+                    as.numeric(format(p, "%M")) / 60 +
+                    as.numeric(format(p, "%S")) / 3600
 
       # compute how many hours ahead of ZT0 was the experiment_start
       h_after_ref <- (hour_start - reference_hour) %% 24
