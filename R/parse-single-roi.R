@@ -191,9 +191,9 @@ parse_single_roi_wrapped <- function(id, region_id,
 
   annot <- annotate_single_roi(out, FUN, ...)
 
-  if (is.function(updateProgress_load)) {
+  if (is.function(updateProgress_annotate)) {
       info_message <- paste0('Ran annotation function for ', path, ' ', region_id)
-      updateProgress_load(detail = info_message)
+      updateProgress_annotate(detail = info_message)
   }
 
   return(annot)
