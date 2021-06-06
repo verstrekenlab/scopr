@@ -42,6 +42,7 @@ get_writable_path <- function(path) {
 #' @importFrom rjson fromJSON toJSON
 #' @method initialize something
 #' @field content List of configuration items
+#' @export
 #' @field config_file Default configuration file path
 scoprConfiguration <- R6::R6Class(classname = "scoprConfiguration", public = list(
 
