@@ -54,7 +54,7 @@ scoprConfiguration <- R6::R6Class(classname = "scoprConfiguration", public = lis
   #' @param config_file Path to the default configuration file
   initialize = function(config_file = file.path(c(file.path(Sys.getenv("HOME"), ".config"), "/etc"), "scopr.conf")) {
 
-    content <- list("debug" = TRUE, "ncores" = 2, stop_backups=FALSE, reference_hour_required=TRUE)
+    content <- list("debug" = FALSE, "ncores" = 1, stop_backups=FALSE, reference_hour_required=TRUE)
     content$folders <- list(
       "ethoscope" = list(
         "path" = "/ethoscope_data/results",
