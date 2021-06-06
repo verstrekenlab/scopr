@@ -24,7 +24,7 @@ get_writable_path <- function(path) {
     dir <- file.path(Sys.getenv("HOME"), ".config")
     path <- file.path(dir, basename(path))
     if (!dir.exists(dir)) dir.create(dir)
-    message(paste0("Updating path ", old_path, " -> ", path))
+    if(self$content$debug) message(paste0("Updating path ", old_path, " -> ", path))
   }
   return(path)
 }
@@ -77,6 +77,11 @@ scoprConfiguration <- R6::R6Class(classname = "scoprConfiguration", public = lis
     self$verify()
   },
 
+  toggle = function(property) {
+    self$content[[property]] <- ! self$content[[property]]
+    self$save()
+  },
+
   #' Make sure all folders that scopr needs are writable
   #' if they are not, recreate them as needed in the HOME folder
   #' @param config_file Configuration file path
@@ -117,7 +122,7 @@ scoprConfiguration <- R6::R6Class(classname = "scoprConfiguration", public = lis
     if (is.null(config_file))
       config_file <- self$config_file
 
-    message(paste0("Saving ", config_file))
+    if(self$content$debug) message(paste0("Saving ", config_file))
     write(x = json, file = config_file)
   },
 
@@ -134,7 +139,7 @@ scoprConfiguration <- R6::R6Class(classname = "scoprConfiguration", public = lis
     if (!file.exists(config_file) & !is.null(config_file))
       self$save(config_file)
     else {
-      message(paste0("Loading ", config_file))
+      if(self$content$debug) message(paste0("Loading ", config_file))
       json <- rjson::fromJSON(file = config_file)
       self$content <- modifyList(self$content, json)
     }
