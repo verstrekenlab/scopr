@@ -12,23 +12,6 @@ is.writable <- function(path) {
 }
 
 
-#' Update the path so it is writable for sure
-#'
-#' If path is not writable, use the same filename but saved instead
-#' to the $HOME folder, which should always be writable
-#' @param path character for a path in the filesystem
-get_writable_path <- function(path) {
-  # check if path is not writable
-  if (!is.writable(path)) {
-    old_path <- path
-    dir <- file.path(Sys.getenv("HOME"), ".config")
-    path <- file.path(dir, basename(path))
-    if (!dir.exists(dir)) dir.create(dir)
-    if(self$content$debug) message(paste0("Updating path ", old_path, " -> ", path))
-  }
-  return(path)
-}
-
 #' Configuration of scopr
 #'
 #' Load and update the configuration of the program
@@ -52,15 +35,15 @@ scoprConfiguration <- R6::R6Class(classname = "scoprConfiguration", public = lis
   #' Initialize a configuration instance
   #' Called by running `scoprConfiguration$new()`
   #' @param config_file Path to the default configuration file
-  initialize = function(config_file = file.path(c(file.path(Sys.getenv("HOME"), ".config"), "/etc"), "scopr.conf")) {
+  initialize = function(config_file = config_files) {
 
-    content <- list("debug" = FALSE, "ncores" = 1, stop_backups=FALSE, reference_hour_required=TRUE)
+    content <- list(debug = FALSE, ncores = 1, stop_backups=FALSE, reference_hour_required=TRUE, testing=FALSE)
     content$folders <- list(
-      "ethoscope" = list(
+      "results" = list(
         "path" = "/ethoscope_data/results",
         "description" = "A path to a folder containing an ethoscope database of sqlite3 files"
       ),
-      "ethoscope_cache" = list(
+      "cache" = list(
         "path" = "/ethoscope_data/cache",
         "description" = "A path to a folder containing rds files for fast reloading of data loaded in a previous run.
         The files here are generated automatically everytime a new fly is loaded with rethomics.
@@ -68,18 +51,19 @@ scoprConfiguration <- R6::R6Class(classname = "scoprConfiguration", public = lis
       )
     )
 
-    index <- which(sapply(config_file, is.writable) & file.exists(config_file))
-    if(length(index) == 0) index <- 1
-    self$config_file <- get_writable_path(config_file[index])
-    stopifnot(is.writable(dirname(self$config_file)))
+    self$config_file <- "/etc/scopr.conf"
     self$content <- content
-    self$load()
-    self$verify()
+    self$load(self$config_file)
+
+    if(self$content$testing) {
+      self$content$folders$results$path <- file.path(scopr::scopr_example_dir(), "/ethoscope_results")
+      self$content$folders$cache$path <- file.path(scopr::scopr_example_dir(), "/ethoscope_cache")
+    }
   },
 
   toggle = function(property) {
     self$content[[property]] <- ! self$content[[property]]
-    self$save()
+    self$save(self$config_file)
   },
 
   #' Make sure all folders that scopr needs are writable
@@ -105,7 +89,7 @@ scoprConfiguration <- R6::R6Class(classname = "scoprConfiguration", public = lis
       if (!dir.exists(writable_f)) dir.create(writable_f, recursive = TRUE)
     }
     self$content <- content
-    self$save()
+    self$save(self$config_file)
 
     if (!identical(self$content, old_content))
       self$save(self$config_file)
@@ -116,11 +100,8 @@ scoprConfiguration <- R6::R6Class(classname = "scoprConfiguration", public = lis
   #' Save the configuration stored in self$content
   #' If the passed config_file is null, use the instance's default
   #' @param config_file Configuration file path
-  save = function(config_file = NULL) {
+  save = function(config_file) {
     json <- rjson::toJSON(self$content)
-
-    if (is.null(config_file))
-      config_file <- self$config_file
 
     if(self$content$debug) message(paste0("Saving ", config_file))
     write(x = json, file = config_file)
@@ -131,12 +112,10 @@ scoprConfiguration <- R6::R6Class(classname = "scoprConfiguration", public = lis
   #' If the passed file does not exist create it with the conf in the default file
   #' If it exists, load its contents and update the configuration
   #' @param config_file Configuration file path
-  load = function(config_file=NULL) {
+  load = function(config_file) {
 
-    if (is.null(config_file))
-      config_file <- self$config_file
-
-    if (!file.exists(config_file) & !is.null(config_file))
+    # if the config file is not does not exist or if it is empty
+    if (!file.exists(config_file) | file.size(config_file) == 0)
       self$save(config_file)
     else {
       if(self$content$debug) message(paste0("Loading ", config_file))
