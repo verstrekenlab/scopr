@@ -1,6 +1,7 @@
 context("load_ethoscope")
 
 dummy_fun <- function(data, velocity_correction_coef = 0.001) {
+  data$velocity_correction_coef <- velocity_correction_coef
   message("velocity_correction_coef = ", velocity_correction_coef)
   return(data)
 }
@@ -51,37 +52,37 @@ test_that("query ethoscopes works with multiple cores", {
   }
 })
 
-test_that("several annotations can be placed in the same call", {
+
+test_that("load_ethoscope can take a FUN", {
 
   dir <- paste0(scopr_example_dir(), "/ethoscope_results/")
-  query <- data.frame(machine_name = c("E_014", "E_014","E_029"),
-                      date = c("2016-01-25", "2016-02-17","2016-01-25"),
-                      time = c("21:46:14", NA, NA),
-                      test=c(1,2,3)
+  query <- data.frame(region_id = 1:2,
+                      machine_name = "E_014",
+                      date = "2016-01-25",
+                      time = "21:46:14"
   )
+
   query <- link_ethoscope_metadata(query, dir)
-  foo <- function(d){behavr::bin_apply_all(d,y = x)}
-  attr(foo, "needed_columns") <- function(){
-    "x"
-  }
 
-  bar <- function(d){behavr::bin_apply_all(d, z = x)}
-  attr(foo, "needed_columns") <- function(){
-    "x"
-  }
+  dt <- load_ethoscope(
+    query, verbose = F,
+    FUN = dummy_fun
+  )
 
-  dt <- load_ethoscope(query, verbose = F, FUN = list(foo, bar))
+  expect_true("velocity_correction_coef" %in% colnames(dt))
+
 })
 
 
-test_that("different coefficients can be passed through load_ethoscope", {
+test_that("FUN parameters can be passed through load_ethoscope", {
 
   dir <- paste0(scopr_example_dir(), "/ethoscope_results/")
-  query <- data.frame(machine_name = c("E_014", "E_014","E_029"),
-                      date = c("2016-01-25", "2016-02-17","2016-01-25"),
-                      time = c("21:46:14", NA, NA),
-                      test=c(1,2,3)
+  query <- data.frame(region_id = 1:2,
+                      machine_name = "E_014",
+                      date = "2016-01-25",
+                      time = "21:46:14"
   )
+
   query <- link_ethoscope_metadata(query, dir)
 
   cnd <- rlang::catch_cnd({
@@ -104,6 +105,33 @@ test_that("different coefficients can be passed through load_ethoscope", {
 
   expect_equal(cnd$message, "velocity_correction_coef = 0.004\n")
 })
+
+
+test_that("several FUN can be placed in the same load_ethoscope call", {
+
+  dir <- paste0(scopr_example_dir(), "/ethoscope_results/")
+  query <- data.frame(region_id = 1:2,
+                      machine_name = "E_014",
+                      date = "2016-01-25",
+                      time = "21:46:14"
+  )
+  query <- link_ethoscope_metadata(query, dir)
+  foo <- function(d, ...){behavr::bin_apply_all(d,y = x, ...)}
+  attr(foo, "needed_columns") <- function(){
+    "x"
+  }
+
+  bar <- function(d, ...){behavr::bin_apply_all(d, y = y, ...)}
+  attr(bar, "needed_columns") <- function(){
+    "y"
+  }
+
+  dt <- load_ethoscope(query, verbose = F, FUN = list(foo, bar), x_bin_length = mins(120))
+
+  expect_true(all(dt[1:2, round(x, digits = 1)] == c(0.4, 0.6)))
+  expect_true(all(c("x", "y") %in% colnames(dt)))
+})
+
 
 
 test_that("callbacks work as expected", {
