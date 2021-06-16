@@ -53,13 +53,17 @@ annotate_one_func <- function(data, id, FUN, ...) {
 #' is NOT id-aware (because it expects a single animal). As such, the result is NOT a behavr table!
 #' @inheritParams annotate_one_func
 #' @param FUN A function or list of functions
+#' @param updateProgress if passed, this function runs everytime an annotation is completed
+#' @param path if passed, the function reports the path that the animal was loaded from (which database)
+#' @param region_id if passed, the function repors the roi number that the animal was loaded from (which position)
+#' @param ... Additional arguments to the passed FUN
 #' @seealso annotate_one_func
 #' @return A behavr table with all summary statistics in different columns
 #' @import data.table
 #' @importFrom purrr map map
 #' @importFrom behavr merge_behavr
 #' @export
-annotate_single_roi <- function(data, FUN=NULL, ...) {
+annotate_single_roi <- function(data, FUN=NULL, updateProgress=NULL, path=NULL, region_id = NULL, ...) {
 
   ## Annotate one single animal (ROI)
   ## ----
@@ -83,6 +87,11 @@ annotate_single_roi <- function(data, FUN=NULL, ...) {
     annotations[[1]] <- data
   }
 
+  if (is.function(updateProgress)) {
+    info_message <- paste0('Ran annotation function for ', path, ' ', region_id)
+    updateProgress(detail = info_message)
+  }
+
 
   merge_annotations <- function(x, y) {
     merge(x, y, by=c("id", "t"))
@@ -102,7 +111,7 @@ annotate_single_roi <- function(data, FUN=NULL, ...) {
 #' @import data.table
 #' @importFrom behavr setmeta
 #' @param data A multi animal behavr table to be pre analyzed or annotated
-#' @param ... Additional arguments to annotae_single_roi
+#' @param ... Additional arguments to annotate_single_roi
 #' @export
 annotate_all <- function(data, ...) {
 
