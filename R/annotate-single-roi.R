@@ -22,7 +22,15 @@ annotate_one_func <- function(data, id, FUN, ...) {
   # containing the id of the fly,
   # as taken from the id column in data
 
-  data_annotated <- FUN(data, ...)
+  args <- list(...)
+  f_params <- attr(FUN, "parameters")()
+
+  args <- append(
+    list(data = data),
+    args[f_params[f_params %in% names(args)]]
+  )
+
+  data_annotated <- do.call(FUN, args)
 
   # Check if the annotation is null or has 0 rows (in either case, considered empty)
   is_empty <- is.null(data_annotated)
