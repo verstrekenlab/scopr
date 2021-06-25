@@ -11,7 +11,7 @@ load_data_single_core <- function(q, ...){
 
   # call parse_single_roi with l_rows combined with the arguments
   # parsed from the metadata file
-  l_dt <- lapply(l_rows, function(x) load_row(x, ...))
+  l_dt <- lapply(l_rows, function(x) load_row(row=x, ...))
 
   # restore a behavr table from a list of behavr tables
   # each element is the behavr table of a single fly
@@ -28,6 +28,7 @@ load_data_single_core <- function(q, ...){
 #' @seealso load_row
 #' @return behavr table
 load_data <- function(q_l, ncores=1, ...) {
+
   if (ncores == 1) {
     l_dt <- lapply(1:length(q_l), function(i) load_data_single_core(q_l[[i]], ...))
   } else{
@@ -35,7 +36,7 @@ load_data <- function(q_l, ncores=1, ...) {
       stop("`parallel` package needed for ncores > 1.
            Please install it.",
            call. = FALSE)
-    }
+      }
     l_dt <- parallel::mclapply(1:length(q_l), function(i) load_data_single_core(q_l[[i]], ...), mc.cores = ncores)
   }
   return(l_dt)
@@ -123,7 +124,6 @@ load_row <- function(row,
   arg_list <- c(arg_list, arg_val)
   arg_list <- check_arg_list_for_dups(arg_list)
 
-
   # call parse_single_roi with this combined list of arguments
   # parse single roi will
   # * load the data into R
@@ -196,7 +196,8 @@ load_ethoscope <- function(metadata,
 
   # Call load_entries_from_one_file in parallel or unithreaded
   # depending on the value of ncores
-  l_dt <- load_data(q_l, ...)
+
+    l_dt <- load_data(q_l, ...)
 
   dt <- behavr::bind_behavr_list(l_dt)
 

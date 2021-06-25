@@ -21,7 +21,6 @@ annotate_one_func <- function(data, id, FUN, ...) {
   # with a single column called
   # containing the id of the fly,
   # as taken from the id column in data
-
   args <- list(...)
   f_params <- attr(FUN, "parameters")()
 

@@ -54,11 +54,6 @@ scoprConfiguration <- R6::R6Class(classname = "scoprConfiguration", public = lis
     self$config_file <- "/etc/scopr.conf"
     self$content <- content
     self$load(self$config_file)
-
-    if(self$content$testing) {
-      self$content$folders$results$path <- file.path(scopr::scopr_example_dir(), "/ethoscope_results")
-      self$content$folders$cache$path <- file.path(scopr::scopr_example_dir(), "/ethoscope_cache")
-    }
   },
 
   toggle = function(property) {
@@ -102,6 +97,11 @@ scoprConfiguration <- R6::R6Class(classname = "scoprConfiguration", public = lis
   #' @param config_file Configuration file path
   save = function(config_file) {
     json <- rjson::toJSON(self$content)
+
+    perm <- file.access(config_file, mode=2)
+    if (perm != 0)
+      stop(paste0("No writing permission for config file: ", config_file))
+
 
     if(self$content$debug) message(paste0("Saving ", config_file))
     write(x = json, file = config_file)

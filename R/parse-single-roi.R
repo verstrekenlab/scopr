@@ -184,14 +184,14 @@ parse_single_roi_wrapped <- function(id, region_id,
   ## ----
   ## Preanalyze or annotate the loaded data
 
-  if (verbose) {
+  if (verbose & !is.null(FUN)) {
   info_message <- paste0('Running annotation function for ', path, ' ', region_id)
   message(info_message)
   }
 
   annot <- annotate_single_roi(out, FUN, ...)
 
-  if (is.function(updateProgress_annotate)) {
+  if (is.function(updateProgress_annotate) & !is.null(FUN)) {
       info_message <- paste0('Ran annotation function for ', path, ' ', region_id)
       updateProgress_annotate(detail = info_message)
   }
