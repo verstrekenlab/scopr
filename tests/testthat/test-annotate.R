@@ -15,6 +15,7 @@ dummy_annot <- function(data, time_window_length = 2) {
   return(data)
 }
 
+
 test_that("annotate_single_roi works without annotation functions", {
 
   data <- behavr:::toy_ethoscope_data()
@@ -22,7 +23,10 @@ test_that("annotate_single_roi works without annotation functions", {
   expect_equal(dt, data)
 })
 
-test_that("annotate_single_roi can handle an annotation function", {
+test_that("annotate_single_roi can handle an annotation function without attributes", {
+
+  setattr(dummy_annot, "parameters", function() {"time_window_length"})
+  setattr(dummy_annot, "variables", function() {"xy_dist_log10x1000"})
 
   data <- behavr:::toy_ethoscope_data()[t < 6,]
   dt <- annotate_single_roi(data = data, FUN = list(dummy_annot))
@@ -32,6 +36,18 @@ test_that("annotate_single_roi can handle an annotation function", {
   expect_true("max_distance" %in% colnames(dt))
   expect_true(all(dt$max_distance == c(-3760, -3950, -3196)))
 })
+
+test_that("annotate_single_roi can handle an annotation function", {
+  data <- behavr:::toy_ethoscope_data()[t < 6,]
+  dt <- annotate_single_roi(data = data, FUN = list(dummy_annot))
+
+  expect_is(dt, class = c('behavr', 'data.table', 'data.frame'))
+  expect_gt(nrow(data), nrow(dt))
+  expect_true("max_distance" %in% colnames(dt))
+  expect_true(all(dt$max_distance == c(-3760, -3950, -3196)))
+})
+
+
 
 test_that("annotate_all can handle several animals", {
 
@@ -54,4 +70,11 @@ test_that("annotate_all can handle several animals", {
   dt <- scopr::annotate_all(data = data, FUN = list(dummy_annot))
 
   expect_true(all(dt$max_distance == c(-3760, -3950, -3196, -3196, -3950, -3760)))
+})
+
+test_that("annotate_all can be passed programmatic arguments", {
+  data <- behavr:::toy_ethoscope_data()[t < 6,]
+  arguments <- list(FUN = dummy_annot)
+  dt <- do.call(scopr::annotate_all, append(arguments, list(data=data)))
+  expect_true(all(dt$max_distance == c(-3760, -3950, -3196)))
 })

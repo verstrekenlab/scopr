@@ -22,12 +22,14 @@ annotate_one_func <- function(data, id, FUN, ...) {
   # containing the id of the fly,
   # as taken from the id column in data
   args <- list(...)
-  f_params <- attr(FUN, "parameters")()
 
-  args <- append(
-    list(data = data),
-    args[f_params[f_params %in% names(args)]]
-  )
+  parameters_FUN <- attr(FUN, "parameters")
+  if (!is.null(parameters_FUN)) {
+    f_params <- attr(FUN, "parameters")()
+    args <- args[f_params[f_params %in% names(args)]]
+  }
+
+  args <- append(args, list(data = data))
 
   data_annotated <- do.call(FUN, args)
 
@@ -74,6 +76,7 @@ annotate_single_roi <- function(data, FUN=NULL, updateProgress=NULL, path=NULL, 
 
   ## Annotate one single animal (ROI)
   ## ----
+
   # Declare a list to store the annotations
   # produced by each passed FUN
   annotations <- list()
