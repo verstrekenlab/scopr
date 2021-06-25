@@ -58,10 +58,13 @@ list_result_files <- function(result_dir, index_file=NULL){
 
   if(!is.null(index_file)){
     index_file <- paste(result_dir, index_file, sep="/")
-    tryCatch({dt_all_files  <- data.table::fread(file = index_file,
-                                                 header = FALSE,
-                                                 verbose = FALSE,
-                                                 showProgress = FALSE)},
+    args <- list(header=FALSE, verbose=FALSE, showProgress=FALSE)
+    if (substr(index_file, 1, 4) == "http") {
+      args <- append(list(input = index_file), args)
+    } else {
+      args <- append(list(file = index_file), args)
+    }
+    tryCatch({dt_all_files  <- do.call(data.table::fread, args)},
              error = function(e) stop(sprintf("Could not find index file: %s",
                                          index_file)))
 
