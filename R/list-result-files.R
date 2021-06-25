@@ -58,7 +58,7 @@ list_result_files <- function(result_dir, index_file=NULL){
 
   if(!is.null(index_file)){
     index_file <- paste(result_dir, index_file, sep="/")
-    tryCatch({dt_all_files  <- data.table::fread(index_file,
+    tryCatch({dt_all_files  <- data.table::fread(file = index_file,
                                                  header = FALSE,
                                                  verbose = FALSE,
                                                  showProgress = FALSE)},
