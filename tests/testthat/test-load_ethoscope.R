@@ -116,12 +116,12 @@ test_that("several FUN can be placed in the same load_ethoscope call", {
                       time = "21:46:14"
   )
   query <- link_ethoscope_metadata(query, dir)
-  foo <- function(d, ...){behavr::bin_apply_all(d,y = x, ...)}
+  foo <- function(data, ...){behavr::bin_apply_all(data,y = x, ...)}
   attr(foo, "needed_columns") <- function(){
     "x"
   }
 
-  bar <- function(d, ...){behavr::bin_apply_all(d, y = y, ...)}
+  bar <- function(data, ...){behavr::bin_apply_all(data, y = y, ...)}
   attr(bar, "needed_columns") <- function(){
     "y"
   }
