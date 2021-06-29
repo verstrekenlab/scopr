@@ -46,7 +46,7 @@ a whole extra day is prepended to the data, because the time series always start
 
 \item{updateProgress_annotate}{Function to call when a new animal is processed successfully}
 
-\item{...}{Additional arguments to FUN}
+\item{...}{Additional arguments to the passed FUN}
 }
 \description{
 Loading is done by read_single_roi. Annotation is done by annotate_single_roi

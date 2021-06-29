@@ -26,6 +26,7 @@ Called by running \code{scoprConfiguration$new()}}
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-new}{\code{scoprConfiguration$new()}}
+\item \href{#method-toggle}{\code{scoprConfiguration$toggle()}}
 \item \href{#method-verify}{\code{scoprConfiguration$verify()}}
 \item \href{#method-save}{\code{scoprConfiguration$save()}}
 \item \href{#method-load}{\code{scoprConfiguration$load()}}
@@ -37,10 +38,7 @@ Called by running \code{scoprConfiguration$new()}}
 \if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{scoprConfiguration$new(
-  config_file = file.path(c(file.path(Sys.getenv("HOME"), ".config"), "/etc"),
-    "scopr.conf")
-)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{scoprConfiguration$new(config_file = config_files)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -52,6 +50,15 @@ if they are not, recreate them as needed in the HOME folder}
 }
 \if{html}{\out{</div>}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-toggle"></a>}}
+\if{latex}{\out{\hypertarget{method-toggle}{}}}
+\subsection{Method \code{toggle()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{scoprConfiguration$toggle(property)}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-verify"></a>}}
@@ -78,7 +85,7 @@ If the passed config_file is null, use the instance's default}
 \if{latex}{\out{\hypertarget{method-save}{}}}
 \subsection{Method \code{save()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{scoprConfiguration$save(config_file = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{scoprConfiguration$save(config_file)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -98,7 +105,7 @@ If it exists, load its contents and update the configuration}
 \if{latex}{\out{\hypertarget{method-load}{}}}
 \subsection{Method \code{load()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{scoprConfiguration$load(config_file = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{scoprConfiguration$load(config_file)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
