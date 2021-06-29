@@ -69,7 +69,6 @@ annotate_one_func <- function(data, id, FUN, ...) {
 #' @seealso annotate_one_func
 #' @return A behavr table with all summary statistics in different columns
 #' @import data.table
-#' @importFrom purrr map map
 #' @importFrom behavr merge_behavr
 #' @export
 annotate_single_roi <- function(data, FUN=NULL, updateProgress=NULL, path=NULL, region_id = NULL, ...) {

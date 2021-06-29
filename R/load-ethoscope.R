@@ -179,7 +179,6 @@ load_row <- function(row,
 #' * [list_result_files] -- to list available files
 #' @references
 #' * [behavr tutorial](https://rethomics.github.io/behavr.html) -- how to work with the obtained [behavr] table
-#' @importFrom purrr map
 #' @export
 load_ethoscope <- function(metadata,
                            ...){
