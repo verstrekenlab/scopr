@@ -222,25 +222,8 @@ read_single_roi <- function(FILE,
     # see experiment_info() for more information
     # 2. convert from ms to s
     if(!is.null(reference_hour)){
-      # get the start time recorded in the dbfile
-      # in a format() compatible format
-      p <- experiment_info$date_time
-      # get a timestamp in hours since the beginning of the day
-      # i.e %Y-%m-%d 10:30:12 becomes 10 + 0.5 + 1/300 hours
-      hour_start <- as.numeric(format(p, "%H")) +
-                    as.numeric(format(p, "%M")) / 60 +
-                    as.numeric(format(p, "%S")) / 3600
 
-      # compute how many hours ahead of ZT0 was the experiment_start
-      h_after_ref <- (hour_start - reference_hour) %% 24
-      # convert to ms
-      ms_after_ref <- h_after_ref * 3600 * 1000
-      # add that amount to the t column so it becomes aligned with ZT
-      # t will reflect the time since ZT0 and NOT since the experiment start
-      # convert to seconds
-      message(sprintf("Adding %d ms to t column of fly %s", ms_after_ref, id))
-
-      roi_dt[, t := (t + ms_after_ref) / 1e3 ]
+      roi_dt <- set_t0_to_zt0(roi_dt, experiment_info, reference_hour)
     }
     else{
       # if no reference_hour available, assume they are already aligned
@@ -273,4 +256,36 @@ read_single_roi <- function(FILE,
   # Close the SQLite connection
   finally = { RSQLite::dbDisconnect(con) }
   )
+}
+
+
+#' Adjust t so t0 is at ZT0
+#' @param roi_dt raw behavr
+#' @param experiment_info list with date_time field in POSIXct format
+#' @param reference_hour integer, hour of the day when ZT0 occurs in GMT timezone
+#' @export
+#' @return modified behavr where the column t has its 0 at the ZT0 of the first day
+set_t0_to_zt0 <- function(roi_dt, experiment_info, reference_hour) {
+
+  # get the start time recorded in the dbfile
+  # in a format() compatible format
+  p <- experiment_info$date_time
+  # get a timestamp in hours since the beginning of the day
+  # i.e %Y-%m-%d 10:30:12 becomes 10 + 0.5 + 1/300 hours
+  hour_start <- as.numeric(format(p, "%H")) +
+    as.numeric(format(p, "%M")) / 60 +
+    as.numeric(format(p, "%S")) / 3600
+
+
+  # compute how many hours ahead of ZT0 was the experiment_start
+  h_after_ref <- (hour_start - reference_hour) %% 24
+  # convert to ms
+  ms_after_ref <- h_after_ref * 3600 * 1000
+  # add that amount to the t column so it becomes aligned with ZT
+  # t will reflect the time since ZT0 and NOT since the experiment start
+  # convert to seconds
+  message(sprintf("Adding %d ms to t column of fly %s", ms_after_ref, id))
+
+  roi_dt[, t := (t + ms_after_ref) / 1e3 ]
+  roi_dt
 }
