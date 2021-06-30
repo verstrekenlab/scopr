@@ -223,7 +223,15 @@ read_single_roi <- function(FILE,
     # 2. convert from ms to s
     if(!is.null(reference_hour)){
 
-      roi_dt <- set_t0_to_zt0(roi_dt, experiment_info, reference_hour)
+      ms_after_ref <- get_ms_after_ref(experiment_info, reference_hour)
+
+      # add that amount to the t column so it becomes aligned with ZT
+      # t will reflect the time since ZT0 and NOT since the experiment start
+      # convert to seconds
+      message(sprintf("Adding %d ms to t column of fly %s", ms_after_ref, id))
+
+      roi_dt[, t := (t + ms_after_ref) / 1e3 ]
+
     }
     else{
       # if no reference_hour available, assume they are already aligned
@@ -260,12 +268,11 @@ read_single_roi <- function(FILE,
 
 
 #' Adjust t so t0 is at ZT0
-#' @param roi_dt raw behavr
 #' @param experiment_info list with date_time field in POSIXct format
 #' @param reference_hour integer, hour of the day when ZT0 occurs in GMT timezone
 #' @export
 #' @return modified behavr where the column t has its 0 at the ZT0 of the first day
-set_t0_to_zt0 <- function(roi_dt, experiment_info, reference_hour) {
+get_ms_after_ref <- function(experiment_info, reference_hour) {
 
   # get the start time recorded in the dbfile
   # in a format() compatible format
@@ -281,11 +288,6 @@ set_t0_to_zt0 <- function(roi_dt, experiment_info, reference_hour) {
   h_after_ref <- (hour_start - reference_hour) %% 24
   # convert to ms
   ms_after_ref <- h_after_ref * 3600 * 1000
-  # add that amount to the t column so it becomes aligned with ZT
-  # t will reflect the time since ZT0 and NOT since the experiment start
-  # convert to seconds
-  message(sprintf("Adding %d ms to t column of fly %s", ms_after_ref, id))
 
-  roi_dt[, t := (t + ms_after_ref) / 1e3 ]
-  roi_dt
+  return(ms_after_ref)
 }
