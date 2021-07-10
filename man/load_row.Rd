@@ -55,3 +55,8 @@ using arguments explicitly declared by the user or taken from the metadata
 \code{map_arg} is a list of the form \code{list(fun_arg = "metavariable")}.
 When provided, \code{FUN} will set specific arguments (\code{fun_arg}) to the value of a (quoted) metavariable.
 }
+\seealso{
+Other load_ethoscope: 
+\code{\link{load_ethoscope}()}
+}
+\concept{load_ethoscope}

@@ -15,8 +15,7 @@ parse_single_roi_wrapped(
   file_size = 0,
   verbose = FALSE,
   FUN = NULL,
-  updateProgress_load = NULL,
-  updateProgress_annotate = NULL,
+  callback = NULL,
   ...
 )
 }
@@ -42,9 +41,7 @@ a whole extra day is prepended to the data, because the time series always start
 
 \item{FUN, }{function or list, a function or list of functions that processes the data loaded from the SQLite file in some meaningful way}
 
-\item{updateProgress_load}{Function to call when a new animal is loaded successfully from the sqlite database}
-
-\item{updateProgress_annotate}{Function to call when a new animal is processed successfully}
+\item{callback}{Function to call when a new animal is loaded successfully from the SQLite database}
 
 \item{...}{Additional arguments to the passed FUN}
 }

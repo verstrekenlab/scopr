@@ -78,6 +78,7 @@ check_arg_list_for_dups <- function(arg_list) {
 #' @details `map_arg` is a list of the form `list(fun_arg = "metavariable")`.
 #' When provided, `FUN` will set specific arguments (`fun_arg`) to the value of a (quoted) metavariable.
 #' @param ... Extra arguments to be passed to `FUN`
+#' @family load_ethoscope
 #'
 load_row <- function(row,
                      min_time = 0,
@@ -134,7 +135,7 @@ load_row <- function(row,
 
 #' Load data from ethoscope result files
 #'
-#' This function is used to import behavioural data generated
+#' This function is used to import behavioral data generated
 #' by the [ethoscope platform](http://gilestrolab.github.io/ethoscope/).
 #' That is it loads multiple `.db` files into a single `R` [behavr::behavr] table.
 #'
@@ -172,15 +173,25 @@ load_row <- function(row,
 #' dt <- load_ethoscope(metadata, reference_hour=9, FUN=head)
 #' dt
 #'
-#' @seealso
-#' Take the mode of a distribution
+#'@seealso
 #' * [behavr::behavr] -- to understand the output format
 #' * [experiment_info] -- to show information about a file/experiment
 #' * [list_result_files] -- to list available files
 #' @references
 #' * [behavr tutorial](https://rethomics.github.io/behavr.html) -- how to work with the obtained [behavr] table
+#' @family load_ethoscope
+#' @inheritParams load_row
+
 #' @export
 load_ethoscope <- function(metadata,
+                           min_time = 0,
+                           max_time = Inf,
+                           reference_hour = NULL,
+                           verbose = TRUE,
+                           columns = NULL,
+                           cache = NULL,
+                           FUN = NULL,
+                           map_arg = NULL,
                            ...){
 
   file_info <- NULL
@@ -196,7 +207,16 @@ load_ethoscope <- function(metadata,
   # Call load_entries_from_one_file in parallel or unithreaded
   # depending on the value of ncores
 
-    l_dt <- load_data(q_l, ...)
+    l_dt <- load_data(q_l,
+                      min_time = min_time,
+                      max_time = max_time,
+                      reference_hour = reference_hour,
+                      verbose = verbose,
+                      columns = columns,
+                      cache = cache,
+                      FUN = FUN,
+                      map_arg = map_arg,
+                      ...)
 
   dt <- behavr::bind_behavr_list(l_dt)
 

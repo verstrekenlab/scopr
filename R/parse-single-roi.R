@@ -28,8 +28,7 @@ parse_single_roi <- function(data,
                              cache=NULL,
                              verbose = FALSE,
                              FUN = NULL,
-                             updateProgress_load = NULL,
-                             updateProgress_annotate = NULL,
+                             callback = NULL,
                              ...){
 
   roi_idx <- NULL
@@ -80,8 +79,7 @@ parse_single_roi <- function(data,
     file_size = fs,
     verbose=verbose,
     FUN,
-    updateProgress_load=updateProgress_load,
-    updateProgress_annotate=updateProgress_annotate,
+    callback = callback,
     ...
   )
 
@@ -102,8 +100,7 @@ parse_single_roi <- function(data,
 #' @param path character, absolue path to dbfile (sqlite)
 #' @param file_size Size of dbfile to be loaded in bytes
 #' @param verbose Whether to report progress or not (via console)
-#' @param updateProgress_load Function to call when a new animal is loaded successfully from the sqlite database
-#' @param updateProgress_annotate Function to call when a new animal is processed successfully
+#' @param callback Function to call when a new animal is loaded successfully from the SQLite database
 #' @import data.table
 #' @importFrom behavr setbehavr
 parse_single_roi_wrapped <- function(id, region_id,
@@ -115,8 +112,7 @@ parse_single_roi_wrapped <- function(id, region_id,
                                      file_size = 0,
                                      verbose = FALSE,
                                      FUN = NULL,
-                                     updateProgress_load = NULL,
-                                     updateProgress_annotate = NULL,
+                                     callback = NULL,
                                      ...
 ){
 
@@ -126,16 +122,6 @@ parse_single_roi_wrapped <- function(id, region_id,
   ## ----
   time_stamp <- NULL
 
-  # if verbose, log some information to the user so he knows
-  # a new fly is being loaded (progress tracking)
-  if (verbose) {
-    info_message <- sprintf("Loading ROI number %i from:\n\t%s\n", region_id, path)
-    message(info_message)
-    # additionally, if a progress bar is available, update it as well
-    # TODO The message is getting updated but the value is not
-
-  }
-
   out <- read_single_roi(path,
                          region_id = region_id,
                          min_time = min_time,
@@ -144,12 +130,6 @@ parse_single_roi_wrapped <- function(id, region_id,
                          columns = columns,
                          time_stamp = time_stamp
   )
-
-  if (is.function(updateProgress_load)) {
-     info_message <- sprintf("Loaded ROI number %i from:\n\t%s\n", region_id, path)
-   updateProgress_load(info_message)
-  }
-
 
   ## ----
   ## Check whether any data could be loaded or not
@@ -180,20 +160,14 @@ parse_single_roi_wrapped <- function(id, region_id,
   met <- data.table::data.table(id = id, key = "id")
   behavr::setbehavr(out, met)
 
-
   ## ----
   ## Preanalyze or annotate the loaded data
 
-  if (verbose & !is.null(FUN)) {
-  info_message <- paste0('Running annotation function for ', path, ' ', region_id)
-  message(info_message)
-  }
-
   annot <- annotate_single_roi(out, FUN, ...)
 
-  if (is.function(updateProgress_annotate) & !is.null(FUN)) {
-      info_message <- paste0('Ran annotation function for ', path, ' ', region_id)
-      updateProgress_annotate(detail = info_message)
+  if (is.function(callback)) {
+      info_message <- sprintf("Loading ROI number %i from:\n\t%s\n", region_id, path)
+      callback(info_message)
   }
 
   return(annot)
