@@ -67,7 +67,8 @@ parse_single_roi <- function(data,
   }
 
 
-  # Call the analysis function, cached or not
+  if (getOption("debug_memoise", default = FALSE)) browser()
+  # Call the analysis function , cached or not
   out <- parse_single_roi_wrapped_memo(
     id,
     region_id,
@@ -79,9 +80,13 @@ parse_single_roi <- function(data,
     file_size = fs,
     verbose=verbose,
     FUN,
-    callback = callback,
     ...
   )
+
+  if (is.function(callback)) {
+    info_message <- sprintf("Loading ROI number %i from:\n\t%s\n", region_id, path)
+    callback(info_message)
+  }
 
   if (!is.null(out))
     behavr::setbehavr(out, data)
@@ -112,7 +117,6 @@ parse_single_roi_wrapped <- function(id, region_id,
                                      file_size = 0,
                                      verbose = FALSE,
                                      FUN = NULL,
-                                     callback = NULL,
                                      ...
 ){
 
@@ -162,13 +166,7 @@ parse_single_roi_wrapped <- function(id, region_id,
 
   ## ----
   ## Preanalyze or annotate the loaded data
-
   annot <- annotate_single_roi(out, FUN, ...)
-
-  if (is.function(callback)) {
-      info_message <- sprintf("Loading ROI number %i from:\n\t%s\n", region_id, path)
-      callback(info_message)
-  }
 
   return(annot)
 }

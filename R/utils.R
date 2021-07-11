@@ -19,3 +19,17 @@ abort_bad_argument <- function(arg, must, not = NULL) {
                not = not
   )
 }
+
+
+get_func_args <- function(FUN, data, ...) {
+  args <- list(...)
+
+  parameters_FUN <- attr(FUN, "parameters")
+  if (!is.null(parameters_FUN)) {
+    f_params <- attr(FUN, "parameters")()
+    args <- args[f_params[f_params %in% names(args)]]
+  }
+
+  args <- append(args, list(data = data))
+  return(args)
+}

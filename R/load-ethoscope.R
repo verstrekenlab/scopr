@@ -187,16 +187,37 @@ load_ethoscope <- function(metadata,
                            min_time = 0,
                            max_time = Inf,
                            reference_hour = NULL,
+                           ncores = 1,
                            verbose = TRUE,
                            columns = NULL,
                            cache = NULL,
                            FUN = NULL,
                            map_arg = NULL,
+                           callback = NULL,
                            ...){
 
   file_info <- NULL
 
   metadata$fly_count <- 1:nrow(metadata)
+
+
+  meta_fun <- list()
+  data_fun <- list()
+
+  if (!is.null(FUN)) {
+    if (is.function(FUN))
+      FUN <- list(FUN)
+  }
+
+  for (func in FUN) {
+    if (is.function(attr(func, "use_meta")) && isTRUE(attr(func, "use_meta")())) {
+      meta_fun <- append(meta_fun, list(func))
+    } else {
+      data_fun <- append(data_fun, list(func))
+    }
+  }
+
+  if (length(data_fun) == 0) data_fun <- NULL
 
   # Split the metadata into a list where every element is a subset
   # where every row has the same path
@@ -211,14 +232,26 @@ load_ethoscope <- function(metadata,
                       min_time = min_time,
                       max_time = max_time,
                       reference_hour = reference_hour,
+                      ncores = ncores,
                       verbose = verbose,
                       columns = columns,
                       cache = cache,
-                      FUN = FUN,
+                      FUN = data_fun,
                       map_arg = map_arg,
+                      callback = callback,
                       ...)
 
   dt <- behavr::bind_behavr_list(l_dt)
+
+  # browser()
+  if (length(meta_fun) != 0) {
+    annotations <- lapply(meta_fun, function(func) {
+      args <- get_func_args(func, dt, ...)
+      do.call(func, args)
+    })
+    dt_meta <- Reduce(behavr::merge_behavr_all, annotations)
+    dt <- behavr::merge_behavr_all(dt, dt_meta)
+  }
 
   # Get rid of temporary data containers not needed anymore
   # Force R to garbage collect, making memory available

@@ -21,16 +21,7 @@ annotate_one_func <- function(data, id, FUN, ...) {
   # with a single column called
   # containing the id of the fly,
   # as taken from the id column in data
-  args <- list(...)
-
-  parameters_FUN <- attr(FUN, "parameters")
-  if (!is.null(parameters_FUN)) {
-    f_params <- attr(FUN, "parameters")()
-    args <- args[f_params[f_params %in% names(args)]]
-  }
-
-  args <- append(args, list(data = data))
-
+  args <- get_func_args(FUN, data, ...)
   data_annotated <- do.call(FUN, args)
 
   # Check if the annotation is null or has 0 rows (in either case, considered empty)
@@ -62,7 +53,6 @@ annotate_one_func <- function(data, id, FUN, ...) {
 #' is NOT id-aware (because it expects a single animal). As such, the result is NOT a behavr table!
 #' @inheritParams annotate_one_func
 #' @param FUN A function or list of functions
-#' @param updateProgress if passed, this function runs everytime an annotation is completed
 #' @param path if passed, the function reports the path that the animal was loaded from (which database)
 #' @param region_id if passed, the function repors the roi number that the animal was loaded from (which position)
 #' @param ... Additional arguments to the passed FUN
@@ -71,16 +61,17 @@ annotate_one_func <- function(data, id, FUN, ...) {
 #' @import data.table
 #' @importFrom behavr merge_behavr
 #' @export
-annotate_single_roi <- function(data, FUN=NULL, updateProgress=NULL, path=NULL, region_id = NULL, ...) {
+annotate_single_roi <- function(data, FUN=NULL, path=NULL, region_id = NULL, ...) {
+
 
   ## Annotate one single animal (ROI)
   ## ----
 
   # Declare a list to store the annotations
   # produced by each passed FUN
-  annotations <- list()
   metadata <- behavr::meta(data)
   data.table::key(metadata)
+  annotations <- list()
 
   # Annotation functions are available
   if (!is.null(FUN)) {
@@ -89,18 +80,21 @@ annotate_single_roi <- function(data, FUN=NULL, updateProgress=NULL, path=NULL, 
     # also works when there is only 1 and the user does not wrap it around list()
     if (is.function(FUN)) {FUN <- list(FUN)}
     data <- as.data.table(data)
-    annotations <- lapply(FUN, function(x) annotate_one_func(data=data, FUN=x, ...))
+
+
+    annotations <- lapply(FUN, function(x) {
+      annotate_one_func(data=data, FUN=x, ...)
+    })
+
 
     # if no annotation FUN is passed
   } else {
     annotations[[1]] <- data
   }
 
-  if (is.function(updateProgress)) {
-    info_message <- paste0('Ran annotation function for ', path, ' ', region_id)
-    updateProgress(detail = info_message)
-  }
-
+  # if (length(data_fun) != 0) {
+  #   annotations <- list(data)
+  # }
 
   merge_annotations <- function(x, y) {
     merge(x, y, by=c("id", "t"))
@@ -111,6 +105,7 @@ annotate_single_roi <- function(data, FUN=NULL, updateProgress=NULL, path=NULL, 
   data_annotated <- Reduce(merge_annotations, annotations)
   data.table::setkey(data_annotated, id)
   behavr::setmeta(data_annotated, metadata)
+
   return(data_annotated)
 }
 
