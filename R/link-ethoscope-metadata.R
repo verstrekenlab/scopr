@@ -154,3 +154,25 @@ link_ethoscope_metadata <- function(x, result_dir=NULL, index_file=NULL){
 
   return(out)
 }
+
+
+#' Unlink an already linked metadata
+#' This makes it possible to repeat an ethoscope data analysis from scratch
+#' @param metadata A data.table containing a linked metadata
+#' i.e. it should contain columns id, machine_id, datetime and file_info at least
+#' @return The same metadata after losing the linking information
+#' @export
+unlink_ethoscope_metadata <- function(metadata) {
+
+  if ("file_info" %in% colnames(metadata)) metadata[, file_info := NULL ]
+  if ("machine_id" %in% colnames(metadata)) metadata[, machine_id := NULL ]
+  if ("id" %in% colnames(metadata)) metadata[, id := NULL ]
+
+  if ("datetime" %in% colnames(metadata)) {
+    metadata[, date := as.character(substr(datetime, 1, 10))]
+    metadata[, time := as.character(substr(datetime, 11, 20))]
+    metadata[, datetime := NULL ]
+  }
+
+  return(metadata)
+}
