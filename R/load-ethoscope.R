@@ -152,7 +152,7 @@ load_row <- function(row,
   intervals <- lapply(intervals, function(interv) {
     # print(interv)
     if (class(interv) == "character" && grepl(pattern = ";", x = interv)) {
-      interv <- strsplit(interv, split = ";") %>% unlist
+      interv <- unlist(strsplit(interv, split = ";"))
     } else if (class(interv) == "character" && interv %in% names(PRESET_INTERVAL)) {
     interv <- PRESET_INTERVAL[[interv]](row)
     } else {
@@ -165,9 +165,9 @@ load_row <- function(row,
 
   dt_patches <- lapply(1:length(intervals), function(i) {
     interv <- intervals[[i]]
-    interv_name <- names(intervals)[i] %>% gsub(pattern = "interval_", replacement = "", x = .)
+    interv_name <- gsub(pattern = "interval_", replacement = "", x = names(intervals)[i])
     args <- arg_list
-    annotation_arg_names <- args$FUN %>% sapply(., function(fun) attr(fun, "parameters")()) %>% unique %>% as.vector
+    annotation_arg_names <- as.vector(unique(sapply(args$FUN, function(fun) attr(fun, "parameters")())))
     default_interval_args <- args[annotation_arg_names[annotation_arg_names %in% names(args)]]
 
     annotation_arg_index <- unlist(lapply(annotation_arg_names, function(arg_name) {
