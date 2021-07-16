@@ -20,6 +20,7 @@ Imports:
   readr,
   stringr,
   RSQLite,
+  magrittr,
   memoise,
   zoo,
   purrr,

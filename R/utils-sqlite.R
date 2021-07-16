@@ -20,6 +20,7 @@ dbConnectFriendly <- function(file, flags=RSQLite::SQLITE_RO, ...) {
 #' into an R list
 #' @param metadata list produced by reading into R the result of the SELECT * FROM METADATA statement
 #' and putting each row into an element of the list, where the field is the list element's name and the value is the list element's value
+#' @importFrom magrittr `%>%`
 get_selected_options <- function(metadata) {
 
   selected_options <- metadata$selected_options %>%
@@ -77,6 +78,7 @@ get_metadata <- function(path) {
 #' @param meta_row A row of metadata
 #' @return Integer vector of length 2 stating the milliseconds since experiment start
 #' until onset and end of sleep deprivation treatment in the animal captured by the metadata
+#' @importFrom magrittr `%>%`
 #' @export
 load_sd_daterange <- function(meta_row, from_zt0=TRUE) {
 
@@ -113,6 +115,7 @@ load_sd_daterange <- function(meta_row, from_zt0=TRUE) {
 #' @param intervals Named list where every element is the start and end time in seconds since experiment start of an interval
 #' The name of the interval should be interval_X, where X is the interval identifier
 #' @seealso load_ethoscope
+#' @importFrom magrittr `%>%`
 #' @export
 load_ethoscope_multiplex <- function(..., intervals=NULL) {
 
