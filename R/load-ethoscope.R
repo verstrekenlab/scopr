@@ -218,12 +218,12 @@ load_row <- function(row,
 
   patches_dt <- Reduce(behavr::rbind_behavr, patches)
   dt <- dt_patches[["default"]]
-  if (length(patches) > 0) {
-     for (i in 1:length(patches)) {
-       interv <- intervals[[names(patches)[i]]]
-       dt <- dt[t < interv[3] | t > interv[4], ]
-     }
-  }
+  # if (length(patches) > 0) {
+  #    for (i in 1:length(patches)) {
+  #      interv <- intervals[[names(patches)[i]]]
+  #      dt <- dt[t < interv[3] | t > interv[4], ]
+  #    }
+  # }
 
   out <- behavr::rbind_behavr(dt, patches_dt)
   behavr::setmeta(out, behavr::meta(dt))
