@@ -15,7 +15,6 @@ parse_single_roi_wrapped(
   file_size = 0,
   verbose = FALSE,
   FUN = NULL,
-  callback = NULL,
   ...
 )
 }
@@ -41,9 +40,9 @@ a whole extra day is prepended to the data, because the time series always start
 
 \item{FUN, }{function or list, a function or list of functions that processes the data loaded from the SQLite file in some meaningful way}
 
-\item{callback}{Function to call when a new animal is loaded successfully from the SQLite database}
-
 \item{...}{Additional arguments to the passed FUN}
+
+\item{callback}{Function to call when a new animal is loaded successfully from the SQLite database}
 }
 \description{
 Loading is done by read_single_roi. Annotation is done by annotate_single_roi

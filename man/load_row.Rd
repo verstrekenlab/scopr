@@ -14,6 +14,7 @@ load_row(
   verbose = TRUE,
   columns = NULL,
   cache = NULL,
+  intervals = NULL,
   FUN = NULL,
   map_arg = NULL,
   ...
@@ -38,6 +39,9 @@ Time (t) is always implicitly selected.
 When \code{NULL} and if \code{FUN} is set, columns can be retrieved automatically (from the attributes of \code{FUN}).}
 
 \item{cache}{the name of a local directory to cache results for faster subsequent data loading.}
+
+\item{intervals}{Named list where every element is the start and end time in seconds since experiment start of an interval
+The name of the interval should be interval_X, where X is the interval identifier}
 
 \item{FUN}{function (optional) to transform the data from each individual
 immediately after is has been loaded.}

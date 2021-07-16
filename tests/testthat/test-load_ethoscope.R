@@ -158,3 +158,58 @@ test_that("callbacks work as expected", {
   expect_equal(cnd$message, "callback successful\n")
 })
 
+
+not_so_dummy_fun <- function(data, multiplier=1, divider=1) {
+  data$x <- data$x * multiplier
+  data$y <- data$y / divider
+  return(data)
+}
+attr(not_so_dummy_fun, "parameters") <- function() {
+  c("multiplier", "divider")
+}
+attr(not_so_dummy_fun, "needed_columns") <- function() {
+  c("x", "y")
+}
+
+
+test_that("load_ethoscope_multiplex works", {
+  dir <- paste0(scopr_example_dir(), "/ethoscope_results/")
+  query <- data.frame(region_id = 1:2,
+                      machine_name = "E_014",
+                      date = "2016-01-25",
+                      time = "21:46:14"
+  )
+
+  query <- link_ethoscope_metadata(query, dir)
+
+  dt1 <- load_ethoscope_multiplex(
+    query, verbose = F,
+    FUN = not_so_dummy_fun,
+  )
+
+  dt2 <- load_ethoscope_multiplex(
+    query, verbose = F,
+    FUN = not_so_dummy_fun,
+    multiplier = 1,
+    divider = 1,
+    multiplier_sd = 2,
+    divider_sd = 2,
+    intervals = list(sd = c(1e4, 2e4))
+  )
+
+  expect_true(all(dt1$t == dt2$t))
+  expect_true(all(c("default", "sd") %in% dt2$interval))
+  expect_true(all(dt2[interval == "sd", x] == dt1[dt2$interval == "sd", x] * 2))
+  expect_true(all(dt2[interval == "sd", y] == dt1[dt2$interval == "sd", y] / 2))
+
+  dt3 <- load_ethoscope_multiplex(
+    query, verbose = F,
+    FUN = not_so_dummy_fun,
+    multiplier = 1,
+    divider = 1,
+    divider_sd = 2,
+    intervals = list(sd = c(1e4, 2e4))
+  )
+  expect_true(all(dt1[interval == "sd", x] == dt3[interval == "sd", x]))
+})
+

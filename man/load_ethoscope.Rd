@@ -9,11 +9,13 @@ load_ethoscope(
   min_time = 0,
   max_time = Inf,
   reference_hour = NULL,
+  ncores = 1,
   verbose = TRUE,
   columns = NULL,
   cache = NULL,
   FUN = NULL,
   map_arg = NULL,
+  callback = NULL,
   ...
 )
 }

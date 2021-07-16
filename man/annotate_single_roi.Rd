@@ -4,21 +4,12 @@
 \alias{annotate_single_roi}
 \title{Automatically annotate a raw single animal behavioral dataset}
 \usage{
-annotate_single_roi(
-  data,
-  FUN = NULL,
-  updateProgress = NULL,
-  path = NULL,
-  region_id = NULL,
-  ...
-)
+annotate_single_roi(data, FUN = NULL, path = NULL, region_id = NULL, ...)
 }
 \arguments{
 \item{data}{A raw i.e. one row per frame behavr table}
 
 \item{FUN}{A function or list of functions}
-
-\item{updateProgress}{if passed, this function runs everytime an annotation is completed}
 
 \item{path}{if passed, the function reports the path that the animal was loaded from (which database)}
 
