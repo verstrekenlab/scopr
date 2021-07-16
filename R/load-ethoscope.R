@@ -130,7 +130,7 @@ load_row <- function(row,
   arg_list <- check_arg_list_for_dups(arg_list)
 
   PRESET_INTERVAL <- list(
-    SD = function(row) {load_sd_daterange(row, from_zt0 = FALSE)}
+    SD = function(row) {c(load_sd_daterange(row, from_zt0 = FALSE), load_sd_daterange(row, from_zt0 = TRUE))}
   )
 
   interval_columns <- grep(pattern = "interval_", x = colnames(row), value = TRUE)
@@ -150,7 +150,7 @@ load_row <- function(row,
   intervals <- append(list(default = c(0, Inf)), intervals)
 
   intervals <- lapply(intervals, function(interv) {
-    print(interv)
+    # print(interv)
     if (class(interv) == "character" && grepl(pattern = ";", x = interv)) {
       interv <- strsplit(interv, split = ";") %>% unlist
     } else if (class(interv) == "character" && interv %in% names(PRESET_INTERVAL)) {
@@ -159,6 +159,9 @@ load_row <- function(row,
     interv
     }
   })
+
+
+  # print(intervals)
 
   dt_patches <- lapply(1:length(intervals), function(i) {
     interv <- intervals[[i]]
@@ -218,7 +221,7 @@ load_row <- function(row,
   if (length(patches) > 0) {
      for (i in 1:length(patches)) {
        interv <- intervals[[names(patches)[i]]]
-       dt <- dt[t < interv[1] | t > interv[2], ]
+       dt <- dt[t < interv[3] | t > interv[4], ]
      }
   }
 
