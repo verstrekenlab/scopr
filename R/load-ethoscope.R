@@ -87,6 +87,7 @@ load_row <- function(row,
                      verbose = TRUE,
                      columns = NULL,
                      cache = NULL,
+                     intervals = NULL,
                      FUN = NULL,
                      map_arg = NULL,
                      ...
@@ -99,6 +100,7 @@ load_row <- function(row,
                    verbose = verbose,
                    columns = columns,
                    cache = cache,
+                   intervals = intervals,
                    FUN = FUN,
                    ...
   )
@@ -125,11 +127,96 @@ load_row <- function(row,
   arg_list <- c(arg_list, arg_val)
   arg_list <- check_arg_list_for_dups(arg_list)
 
-  # call parse_single_roi with this combined list of arguments
-  # parse single roi will
-  # * load the data into R
-  # * preanalyze / annotate it
-  do.call(parse_single_roi, arg_list)
+  PRESET_INTERVAL <- list(
+    SD = function(row) {load_sd_daterange(row, from_zt0 = FALSE)}
+  )
+
+  interval_columns <- grep(pattern = "interval_", x = colnames(row), value = TRUE)
+
+
+  if (is.null(intervals) & length(interval_columns) != 0) {
+    intervals <- lapply(1:length(interval_columns), function(i) {
+      interv <- row[[interval_columns[i]]]
+      # interv_name <- gsub(pattern = "interval_", replacement = "", x = interval_columns[i])
+      if (interv %in% names(PRESET_INTERVAL)) {
+
+        interv <- PRESET_INTERVAL[[interv]](row)
+      } else {
+        interv <- strsplit(interv, split = ";") %>% unlist
+      }
+    })
+    names(intervals) <- interval_columns
+  } else {
+    intervals <- list()
+  }
+
+  intervals <- append(list(default = c(0, Inf)), intervals)
+
+  dt_patches <- lapply(1:length(intervals), function(i) {
+    interv <- intervals[[i]]
+    interv_name <- names(intervals)[i] %>% gsub(pattern = "interval_", replacement = "", x = .)
+    args <- arg_list
+    annotation_arg_names <- args$FUN %>% sapply(., function(fun) attr(fun, "parameters")()) %>% unique
+    default_interval_args <- args[annotation_arg_names[annotation_arg_names %in% names(args)]]
+
+    annotation_arg_index <- unlist(lapply(annotation_arg_names, function(arg_name) {
+      grep(pattern = arg_name, x = names(args))
+    })
+    )
+    non_annotation_args <- args[-annotation_arg_index]
+    annotation_args <- args[annotation_arg_index]
+    annotation_args <- annotation_args[!names(annotation_args) %in% annotation_arg_names]
+    annotation_args <- annotation_args[grep(pattern = interv_name, x = names(annotation_args))]
+    names(annotation_args) <- sapply(names(annotation_args), function(arg_name) {
+      gsub(pattern = paste0("_", interv_name), replacement = "", x = arg_name)
+    })
+
+
+    # if only some of the parameters are passed for a specific interval
+    # use the defaults for the remaining parameters
+    # the default is defined by
+    final_annotation_args <- default_interval_args
+    for (arg_name in names(annotation_args)) {
+      final_annotation_args[[arg_name]] <- annotation_args[[arg_name]]
+    }
+
+    if (names(non_annotation_args)[1] == "" & "list" %in% class(non_annotation_args[1])) {
+      names(non_annotation_args)[1] <- "data"
+    }
+    non_annotation_args <- non_annotation_args[setdiff(names(non_annotation_args), c("min_time", "max_time"))]
+
+    args <- append(
+      append(non_annotation_args, final_annotation_args),
+      list(
+        min_time = interv[1], max_time = interv[2]
+      )
+    )
+
+    # call parse_single_roi with this combined list of arguments
+    # parse single roi will
+    # * load the data into R
+    # * preanalyze / annotate it
+    out <- do.call(parse_single_roi, args)
+    out$interval <- interv_name
+    out
+  })
+
+  names(dt_patches) <- names(intervals)
+
+  patches <- dt_patches[setdiff(names(dt_patches), "default")]
+
+  patches_dt <- Reduce(behavr::rbind_behavr, patches)
+  dt <- dt_patches[["default"]]
+  if (length(patches) > 0) {
+     for (i in 1:length(patches)) {
+       interv <- intervals[[names(patches)[i]]]
+       dt <- dt[t < interv[1] | t > interv[2], ]
+     }
+  }
+
+  out <- behavr::rbind_behavr(dt, patches_dt)
+  behavr::setmeta(out, behavr::meta(dt))
+  out
 }
 
 
@@ -309,7 +396,7 @@ get_metadata <- function(path) {
   names(value) <- metadata$field
   metadata <- value
   metadata$selected_options <- get_selected_options(metadata)
-  metadata$date_time <- as.numeric(metadata$date_time)
+metadata$date_time <- as.numeric(metadata$date_time)
   metadata$frame_width <- as.numeric(metadata$frame_width)
   metadata$frame_height <- as.numeric(metadata$frame_height)
 
