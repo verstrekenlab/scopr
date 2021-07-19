@@ -167,29 +167,39 @@ load_row <- function(row,
     interv <- intervals[[i]]
     interv_name <- gsub(pattern = "interval_", replacement = "", x = names(intervals)[i])
     args <- arg_list
-    annotation_arg_names <- as.vector(unique(sapply(args$FUN, function(fun) attr(fun, "parameters")())))
-    default_interval_args <- args[annotation_arg_names[annotation_arg_names %in% names(args)]]
+    if (!is.null(args$FUN)) {
+      annotation_arg_names <- as.vector(unique(sapply(args$FUN, function(fun) attr(fun, "parameters")())))
+      default_interval_args <- args[annotation_arg_names[annotation_arg_names %in% names(args)]]
 
-    annotation_arg_index <- unlist(lapply(annotation_arg_names, function(arg_name) {
-      grep(pattern = arg_name, x = names(args))
-    })
-    )
-    non_annotation_args <- args[-annotation_arg_index]
-    annotation_args <- args[annotation_arg_index]
-    annotation_args <- annotation_args[!names(annotation_args) %in% annotation_arg_names]
-    annotation_args <- annotation_args[grep(pattern = interv_name, x = names(annotation_args))]
-    names(annotation_args) <- sapply(names(annotation_args), function(arg_name) {
-      gsub(pattern = paste0("_", interv_name), replacement = "", x = arg_name)
-    })
+      annotation_arg_index <- unlist(lapply(annotation_arg_names, function(arg_name) {
+        grep(pattern = arg_name, x = names(args))
+      })
+      )
+      non_annotation_args <- args[-annotation_arg_index]
+      annotation_args <- args[annotation_arg_index]
+      annotation_args <- annotation_args[!names(annotation_args) %in% annotation_arg_names]
+      annotation_args <- annotation_args[grep(pattern = interv_name, x = names(annotation_args))]
+      names(annotation_args) <- sapply(names(annotation_args), function(arg_name) {
+        gsub(pattern = paste0("_", interv_name), replacement = "", x = arg_name)
+      })
+      final_annotation_args <- default_interval_args
+      for (arg_name in names(annotation_args)) {
+        final_annotation_args[[arg_name]] <- annotation_args[[arg_name]]
+      }
+
+    } else {
+      annotation_arg_names <- c()
+      annotation_args <- c()
+      non_annotation_args <- args
+      final_annotation_args <- c()
+    }
+    # browser()
 
 
     # if only some of the parameters are passed for a specific interval
     # use the defaults for the remaining parameters
     # the default is defined by
-    final_annotation_args <- default_interval_args
-    for (arg_name in names(annotation_args)) {
-      final_annotation_args[[arg_name]] <- annotation_args[[arg_name]]
-    }
+
 
     if (names(non_annotation_args)[1] == "" & "list" %in% class(non_annotation_args[1])) {
       names(non_annotation_args)[1] <- "data"
@@ -224,7 +234,6 @@ load_row <- function(row,
   #      dt <- dt[t < interv[3] | t > interv[4], ]
   #    }
   # }
-
   out <- behavr::rbind_behavr(dt, patches_dt)
   behavr::setmeta(out, behavr::meta(dt))
   out
