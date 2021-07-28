@@ -193,8 +193,6 @@ load_row <- function(row,
       non_annotation_args <- args
       final_annotation_args <- c()
     }
-    # browser()
-
 
     # if only some of the parameters are passed for a specific interval
     # use the defaults for the remaining parameters
@@ -218,11 +216,17 @@ load_row <- function(row,
     # * load the data into R
     # * preanalyze / annotate it
     out <- do.call(parse_single_roi, args)
-    out$interval <- interv_name
+    if (is.null(out)) {
+      warning(sprintf("ROI %s from file %s has no data", args$data$region_id, args$data$file_info[[1]]$path))
+    } else {
+      out$interval <- interv_name
+    }
     out
   })
 
   names(dt_patches) <- names(intervals)
+
+  dt_patches <- dt_patches[!sapply(dt_patches, is.null)]
 
   patches <- dt_patches[setdiff(names(dt_patches), "default")]
 
@@ -234,9 +238,17 @@ load_row <- function(row,
   #      dt <- dt[t < interv[3] | t > interv[4], ]
   #    }
   # }
-  out <- behavr::rbind_behavr(dt, patches_dt)
-  behavr::setmeta(out, behavr::meta(dt))
-  out
+  if (is.null(patches_dt)) {
+    out <- dt
+  } else {
+    out <- behavr::rbind_behavr(dt, patches_dt)
+  }
+
+  if (!is.null(out)) {
+    return(behavr::setmeta(out, behavr::meta(dt)))
+  } else {
+    return(out)
+  }
 }
 
 
