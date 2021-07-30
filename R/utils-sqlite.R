@@ -92,9 +92,14 @@ load_sd_daterange <- function(meta_row, from_zt0=TRUE) {
     timestamps <- c(-1, -1)
 
   } else {
-    timestamps <- strsplit(date_range, split = "  ") %>% lapply(., function(x) {
-      x %>% as.POSIXct(tz = "GMT") %>% as.numeric
-    }) %>% unlist
+    timestamps <- strsplit(date_range, split = " ") %>% unlist
+    timestamps <- timestamps[timestamps != ""] %>%
+      matrix(ncol=2,byrow=TRUE) %>%
+      apply(X = ., MARGIN = 1, FUN = function(x) paste(x, collapse = " ")) %>%
+      as.list %>%
+      lapply(., function(x) {
+        x %>% as.POSIXct(tz = "GMT") %>% as.numeric
+      }) %>% unlist
   }
 
   date_time <- metadata$date_time
