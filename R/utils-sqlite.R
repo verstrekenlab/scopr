@@ -28,6 +28,7 @@ get_selected_options <- function(metadata) {
     gsub(x = ., pattern = "<class ", replacement = "") %>%
     gsub(x=., pattern = ">", replacement = "") %>%
     gsub(x=., pattern = "\\(\\)", replacement = '""') %>%
+    gsub(x=., pattern = 'u\"', replacement = '\"') %>%
     jsonlite::parse_json(json = .)
   return(selected_options)
 }
