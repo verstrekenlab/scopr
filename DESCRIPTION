@@ -1,7 +1,7 @@
 Package: scopr
 Title: Read Ethoscope Data
 Date: 2018-05-26
-Version: 0.3.3
+Version: 0.3.99
 Authors@R: c(
     person("Quentin", "Geissmann", role = c("aut", "cre"), email = "qgeissmann@gmail.com")
     )
